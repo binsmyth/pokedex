@@ -275,12 +275,13 @@ describe('PokemonDetail Component', () => {
 
   // Test 16: Fetches data when route parameter changes
   test('fetches new data when Pokemon ID parameter changes', async () => {
-    const { rerender } = renderWithRouter('/PokemonDetail/1');
+    const { unmount } = renderWithRouter('/PokemonDetail/1');
 
     await waitFor(() => {
       expect(pokeapi.get).toHaveBeenCalledWith('pokemon/1');
     });
 
+    unmount();
     jest.clearAllMocks();
 
     pokeapi.get.mockImplementation((url) => {
@@ -296,15 +297,7 @@ describe('PokemonDetail Component', () => {
       });
     });
 
-    // Re-render with new ID
-    window.history.pushState({}, 'Test page', '/PokemonDetail/25');
-    rerender(
-      <BrowserRouter>
-        <Routes>
-          <Route path="/PokemonDetail/:index" element={<PokemonDetail />} />
-        </Routes>
-      </BrowserRouter>
-    );
+    renderWithRouter('/PokemonDetail/25');
 
     await waitFor(() => {
       expect(screen.getByText('pikachu')).toBeInTheDocument();

@@ -33,10 +33,10 @@ const PokemonDetail = props =>{
   return (
     <div>
 
-      <Card shadow="sm" ml="8vw" pb="xl" radius="md" className={classes.Card} bg={`${descript?.data?.color?.name}`} withBorder >
+      <Card component="article" shadow="sm" ml="8vw" pb="xl" radius="md" className={classes.Card} bg={`${descript?.data?.color?.name}`} withBorder >
         <Card.Section component="a">
           <div className={`${classes.GlowingCircle} ${classes.Glow}`}></div>
-          <Image src={id<10000 ? `https://assets.pokemon.com/assets/cms2/img/pokedex/detail/${id}.png`: detail?.data.sprites.front_default} height={200} fit="contain" />
+          <Image alt="pokemon" src={Number(id)<906 ? `https://assets.pokemon.com/assets/cms2/img/pokedex/detail/${id}.png`: detail?.data.sprites.front_default} height={200} fit="contain" />
         </Card.Section>
         <Card.Section p="lg" >
             <Text weight={1000} className={classes.title}>{detail?.data.name}</Text>

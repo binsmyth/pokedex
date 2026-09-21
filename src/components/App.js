@@ -51,7 +51,7 @@ const App=() => {
   const renderFrontPage = () =>{
     if(loading){
       return(
-        <Loader />
+        <div role="progressbar"><Loader /></div>
       )
     }
     return(
@@ -82,7 +82,7 @@ const App=() => {
 
   return (
     <MantineProvider theme={themes}>
-      <Center>
+      <Center component="main" role="main">
       <Container size="lg" pb="10vh" pt="5vh" >
         <Stack align="center">
           <SearchBar />

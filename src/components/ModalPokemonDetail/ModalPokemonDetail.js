@@ -29,9 +29,9 @@ import { Card, Text, Image, Grid, Modal } from '@mantine/core';
         },[pokeImageSrc]);
         return (    
                 <Modal opened={openModal} onClose={()=>setOpenModal(false)} size={300}>
-                    <Card shadow="sm" ml="8vw" pb="xl" radius="md" withBorder >
+                    <Card component="article" shadow="sm" ml="8vw" pb="xl" radius="md" withBorder >
                             <Card.Section component="a">
-                                <Image src={id<10000 ? `https://assets.pokemon.com/assets/cms2/img/pokedex/detail/${id}.png`: detail?.data.sprites.front_default} height={200} fit="contain" />
+                                <Image alt="pokemon" src={Number(id)<906 ? `https://assets.pokemon.com/assets/cms2/img/pokedex/detail/${id}.png`: detail?.data.sprites.front_default} height={200} fit="contain" />
                             </Card.Section>
                             <Card.Section p="lg" >
                                 <Text weight={1000}>{detail?.data.name}</Text>

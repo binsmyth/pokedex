@@ -10,9 +10,8 @@ jest.mock('../api/pokeapi');
 
 // Helper to render ModalPokemonDetail with routing and outlet context
 const renderWithRouter = (initialRoute = '/ModalPokemonDetail/1') => {
-  const [openModal, setOpenModal] = React.useState(true);
-
   function AppWrapper() {
+    const [openModal, setOpenModal] = React.useState(true);
     return (
       <Outlet context={[openModal, setOpenModal]} />
     );
@@ -346,16 +345,15 @@ describe('ModalPokemonDetail Component', () => {
 
     // Get close button (usually in header of modal)
     // Note: Mantine Modal has a close button in the header
-    const closeButton = screen.getByRole('button', { name: /close/i }) ||
+    const closeButton = screen.queryByRole('button', { name: /close/i }) ||
                        screen.queryByRole('button');
 
     if (closeButton) {
       fireEvent.click(closeButton);
     }
 
-    // Modal structure should still be there (state managed by parent)
     await waitFor(() => {
-      expect(screen.getByText('bulbasaur')).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 
