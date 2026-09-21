@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import SearchBar from '../SearchBar/SearchBar';
 import PokeSelect from './PokeSelect';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Grid, Container, Stack, Pagination, Space, Input, Flex, Loader, createStyles, MediaQuery, Center } from '@mantine/core';
 import FrontPage from './FrontPage';
+import FavoritesList from './FavoritesList';
+import Header from './Header';
+import useFavorites from '../hooks/useFavorites';
 import pokeapi from '../api/pokeapi';
 import { MantineProvider } from '@mantine/core';
 import themes from './themes/themes';
@@ -17,6 +20,9 @@ const App=() => {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false); //loader spinner need to make it better later on
   const [openModal, setOpenModal] = useState(false);
+  const { favorites, toggleFavorite, isFavorite } = useFavorites();
+  const location = useLocation();
+  const isFavoritesRoute = location.pathname === '/favorites';
   console.log("working");
   const useStyles = createStyles((theme) => ({
     grid:{
@@ -56,16 +62,16 @@ const App=() => {
     }
     return(
       <>
-        <FrontPage pokeData={pokeData} setOpenModal={setOpenModal}/>
+        <FrontPage pokeData={pokeData} setOpenModal={setOpenModal} isFavorite={isFavorite} onToggleFavorite={toggleFavorite}/>
         <Space h="md" />
         <Pagination total={pagecount} boundaries={1} size="xs" onChange={setPage} page={page} />
         <Space h="md" />
         <Flex>
-          Jump To Page : 
+          Jump To Page :
           <Space w="md" />
           <Input
             size="xs"
-            sx={{width:'70px', fontSize: '5px'}} 
+            sx={{width:'70px', fontSize: '5px'}}
             onKeyDown={event => {
               if(event.key === 'Enter'){
                 setPage(parseInt(event.target.value));
@@ -85,6 +91,7 @@ const App=() => {
       <Center>
       <Container size="lg" pb="10vh" pt="5vh" >
         <Stack align="center">
+          <Header favoritesCount={favorites.length} />
           <SearchBar />
           <PokeSelect setPokeData={setPokeData} />
         </Stack>
@@ -96,7 +103,14 @@ const App=() => {
             </MediaQuery>
             
             <Grid.Col md={6} lg={5} sm={1} span={12}>
-              {renderFrontPage()}
+              {isFavoritesRoute
+                ? <FavoritesList
+                    favorites={favorites}
+                    setOpenModal={setOpenModal}
+                    isFavorite={isFavorite}
+                    onToggleFavorite={toggleFavorite}
+                  />
+                : renderFrontPage()}
             </Grid.Col >
         </Grid>
       </Container>

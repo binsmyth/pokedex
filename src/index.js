@@ -16,6 +16,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/PokemonDetail/:index" element={<Suspense fallback={<Loader />}><PokemonDetail /></Suspense>} />
         <Route path="/ModalPokemonDetail/:index" element={<Suspense fallback={<Loader />}><ModalPokemonDetail /></Suspense>} />
         <Route path="/Search" element={<Suspense fallback={<Loader />}><ImageCard /></Suspense>} />
+        <Route path="/favorites" element={<Suspense fallback={<Loader />}><></></Suspense>} />
       </Route>
     </Routes>
   </BrowserRouter>);

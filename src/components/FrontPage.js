@@ -1,28 +1,25 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import './styles/styles.css';
-import { SimpleGrid, Card, Text, Center } from '@mantine/core';
-import AvatarImage from './AvatarImage/AvatarImage';
+import { SimpleGrid } from '@mantine/core';
+import PokemonCard from './PokemonCard';
 import { useMediaQuery } from '@mantine/hooks';
 
-const FrontPage = props =>{
+const FrontPage = ({ pokeData, setOpenModal, isFavorite, onToggleFavorite }) => {
   const matches = useMediaQuery('(min-width: 576px)');
   return (
     <SimpleGrid cols={3} spacing="md">
-      {props.pokeData && props.pokeData.map((src,index)=>{
-        return (
-          <div key={index} >
-            <Link to={matches ? `/PokemonDetail/${src.id}`: `/ModalPokemonDetail/${src.id}`} state={{id:src.id, urls:src.sprites.front_default}} onClick={()=>props.setOpenModal(true)}>
-              <Card withBorder p="xl" pb="12vh" shadow="sm">
-                <Center><AvatarImage urls={src.sprites.front_default} id={src.id}/></Center>
-                <Card.Section><Text component="p" align="center" lineClamp={1} size="xs">{src.name}</Text></Card.Section>
-              </Card>
-            </Link>
-          </div>
-        )
-      })}
+      {pokeData && pokeData.map((src, index) => (
+        <PokemonCard
+          key={index}
+          pokemon={src}
+          matches={matches}
+          setOpenModal={setOpenModal}
+          isFavorite={isFavorite}
+          onToggleFavorite={onToggleFavorite}
+        />
+      ))}
     </SimpleGrid>
-  )
+  );
 };
 
 export default FrontPage;
