@@ -1,6 +1,6 @@
-# Pokémon Card Game - Requirements & Roadmap
+# Pokémon Battle Simulator - Requirements & Roadmap
 
-**Project Vision:** Build a Pokémon card game with matchup battles, starting from the existing Pokédex app. Implement as tiny incremental features, progressively building from simple to complex.
+**Project Vision:** Add a 1v1 turn-based battle system to the Pokédex app where players can battle their favorite Pokémon using type matchups and stats. Implement as tiny incremental features, progressively building from simple to complex.
 
 ---
 
@@ -68,10 +68,10 @@ END CONDITION:
 ```
 
 ### Player Interactions
-- **Pokémon Selection:** Pick their Pokémon (or random option)
-- **Move Selection:** Click move from their Pokémon's move pool each turn
+- **Pokémon Selection:** Pick their Pokémon from the Pokédex or use a random battle
+- **Move Selection:** Click move from their Pokémon's available moves each turn
 - **View Stats:** See current HP, types, stats during battle
-- **Replay/Share:** Save and view battle result
+- **Rematch:** Fight again or select different Pokémon
 
 ### Visual Elements Required
 
@@ -157,91 +157,139 @@ END CONDITION:
 
 ### Damage Calculation Formula (Level 1)
 
-```
-Base Damage = Move Power
+Use this exact, deterministic formula:
 
-Type Multiplier = Get from PokeAPI type matchups
-  - 2x (super effective)
-  - 1x (neutral)
-  - 0.5x (resists)
-  - 0x (immune)
-
-Stat Modifier = Attacker ATK / Defender DEF
-  - Clamp to reasonable range (0.5x - 2.0x)
-
-FINAL DAMAGE = Base Damage × Type Multiplier × Stat Modifier
-
-Apply to Defender HP:
-  Defender HP = Defender HP - FINAL DAMAGE
-  (Minimum 0)
+```javascript
+const calculateDamage = (moveData, attacker, defender) => {
+  const baseRawDamage = moveData.power * (attacker.attack / defender.defense);
+  const typeMultiplier = getTypeMatchup(moveData.type, defender.types);
+  const rawDamage = baseRawDamage * typeMultiplier;
+  const finalDamage = Math.max(1, Math.floor(rawDamage));
+  return finalDamage;
+};
 ```
 
-### Turn Order
-```
-IF Attacker Speed > Defender Speed:
-  Attacker goes first
-ELSE:
-  Defender goes first
+**Formula Details:**
+- `moveData.power`: The move's base power (never null; pre-curated moves only)
+- `attacker.attack`: Base Attack stat (no level scaling for MVP)
+- `defender.defense`: Base Defense stat
+- `typeMultiplier`: Looked up from type matchup table
+  - Dual-type: multiply damage vs Type1 × damage vs Type2 (e.g., Rock vs Fire/Flying = 2x × 2x = 4x)
+  - Super effective: 2x
+  - Resistant: 0.5x
+  - Immune: 0x
+- No STAB, no critical hits, no randomness in MVP
+- **Minimum damage of 1** if result rounds below 1
 
-(Ties: Defender goes first, or random, or simultaneous)
-```
+**Examples:**
+- Move Power 40, ATK 100, DEF 50, type 1x: `40 * (100/50) * 1 = 80 damage`
+- Move Power 40, ATK 100, DEF 50, type 0.5x: `40 * (100/50) * 0.5 = 40 damage`
+- Move Power 10, ATK 50, DEF 200, type 1x: `max(1, floor(10 * (50/200) * 1)) = max(1, floor(0.25)) = 1 damage`
 
-### State Management
+### Turn Order & Resolution
+
+**Speed-based turn order:**
+- If `attacker.speed > defender.speed`: Attacker goes first
+- If `attacker.speed <= defender.speed`: Defender goes first
+  - (On a tie, defender always acts first to break symmetry)
+
+**Critical rule: A Pokémon faints immediately upon reaching 0 HP**
+- If the faster Pokémon KOs the slower one, the slower Pokémon does **not** get to act that turn
+- If both reach 0 HP in the same turn (edge case): The turn order determines a winner (whoever would have acted last loses; first attacker wins)
+
+**No simultaneous attacks in MVP**
+
+### Battle State Machine
+
+Battle progresses through discrete phases:
+
 ```
+phase: "setup" | "player_select" | "resolving" | "finished"
+
 Battle State:
 {
-  playerPokemon: {
-    id, name, currentHP, maxHP, stats, moves, types
-  },
-  opponentPokemon: {
-    id, name, currentHP, maxHP, stats, moves, types
-  },
+  phase: "setup",  // Initial data loaded
+  playerPokemon: { id, name, currentHP, maxHP, stats, moves, types },
+  opponentPokemon: { id, name, currentHP, maxHP, stats, moves, types },
   currentTurn: number,
-  battleLog: [
-    { turn, actor, action, damage, result }
-  ],
+  battleLog: [ { turn, actor, action, damage, result } ],
   winner: null | "player" | "opponent"
 }
 ```
+
+**State Transitions:**
+- `setup` → `player_select`: Both Pokémon loaded and ready
+- `player_select` → `resolving`: Player selects a move
+- `resolving` → `player_select`: Turn resolves, if both alive
+- `resolving` → `finished`: Battle ends (either Pokémon at 0 HP)
+- `finished` → `setup`: Player clicks Rematch/New Battle (reset all state)
 
 ---
 
 ## Data Requirements
 
-### From PokeAPI
+### Move Catalog (Curated Local Data, MVP)
 
-**Pokémon Data:**
+**For MVP, use a hand-curated move catalog with the following structure:**
+
+```json
+{
+  "moves": [
+    {
+      "id": "move_123",
+      "name": "Tackle",
+      "power": 40,
+      "type": "normal",
+      "description": "A physical attack."
+    },
+    {
+      "id": "move_124",
+      "name": "Flame Charge",
+      "power": 50,
+      "type": "fire",
+      "description": "A fire attack."
+    }
+  ]
+}
+```
+
+**Why local curated moves?**
+- PokeAPI move pools are version-specific and require complex filtering
+- Many PokeAPI moves have `power: null` and unsupported effects
+- A curated set ensures predictable battle balance and no surprises
+- Easier to test and debug
+
+**For Level 2+**, fetch move data from PokeAPI with filtering for `power != null` and version-specific learn methods.
+
+### Pokémon Data (From PokeAPI or Pokédex Cache)
+
+**Required fields for battle:**
 - `id` (national dex number)
 - `name`
-- `stats` (HP, Attack, Defense, Sp.Atk, Sp.Def, Speed)
+- `stats` (array with keys: hp, attack, defense, sp_atk, sp_def, speed)
 - `sprites.front_default` (battle image)
-- `types` (primary and secondary type)
+- `types` (array of 1-2 type objects)
 
-**Moves Data:**
-- `name`
-- `power` (base power for damage calculation)
-- `type` (for type matchup)
-- `accuracy` (optional for Level 2+)
-- `effect_chance` (for status effects in Level 3+)
+**For MVP:** Cache Pokémon data once loaded in the Pokédex; reuse during battle. Do not require fresh API calls for battle startup.
 
-**Type Matchups:**
-- `/type/{type_id}`
-  - `damage_relations.double_damage_to` (deals 2x to these types)
-  - `damage_relations.half_damage_to` (deals 0.5x to these types)
-  - `damage_relations.no_damage_to` (deals 0x to these types)
-  - Reverse relations for defense
+### Type Matchup Table (Static Reference)
 
-### How to Calculate Dual-Type Matchups
+Embedding or loading from PokeAPI `/type/{type_id}` endpoint:
 ```
-For Pokémon with Type1 and Type2:
+Damage Relations:
+  - double_damage_to: types this type is strong against
+  - half_damage_to: types this type resists
+  - no_damage_to: types this type is immune to
+```
 
-Damage Taken Modifier = 
-  (Damage vs Type1) × (Damage vs Type2)
+**Dual-Type Calculation:**
+```
+Defender takes (Attack Type vs Def Type1) × (Attack Type vs Def Type2)
 
-Example: Fire/Flying type takes Damage from Rock:
-  Rock vs Fire = 2x
-  Rock vs Flying = 2x
-  Total = 2x × 2x = 4x damage taken (very weak to Rock)
+Example: Fire move vs Water/Flying Pokémon
+  Fire vs Water = 0.5x (resists)
+  Fire vs Flying = 2x (super effective)
+  Total multiplier = 0.5x × 2x = 1x (neutral)
 ```
 
 ---
@@ -250,31 +298,39 @@ Example: Fire/Flying type takes Damage from Rock:
 
 ### Data Flow
 ```
-Pokédex (existing) → Game Feature (new)
-  - Reuse Pokémon cards/display
-  - Link from detail view to battle simulator
-  - Battle system is separate but consumes same PokeAPI data
+Pokédex (existing) → Battle Feature (new)
+  - Reuse cached Pokémon data from Pokédex
+  - Link from Pokémon detail view to battle simulator
+  - Battle system uses same type matchup data
 ```
 
-### Component Structure (Suggested)
+### Component Structure
 ```
 /src/components/
   /Battle/
-    Battle.js (main battle container)
+    Battle.js (main battle container + state machine)
     BattleArena.js (visual battle display)
-    MoveSelector.js (move button list)
+    MoveSelector.js (move button list, disabled when not in player_select phase)
     HealthBar.js (animated health display)
     DamageIndicator.js (floating damage numbers)
-    BattleLog.js (turn summary)
   /Game/ (or /CardGame/)
-    GameHome.js (battle entry point)
+    BattleSetup.js (Pokémon selection screen)
     BattleResultsScreen.js (winner display)
 ```
 
-### State Management
-- Local React state for MVP (useState)
-- Could upgrade to Redux/Context for Level 3+ (multiple effects, status tracking)
-- Keep battle logic in pure functions (easy to test, reuse, adapt)
+### State Management (MVP)
+- React `useState` for battle state
+- Use a reducer pattern or explicit state machine for battle phases
+- Keep all battle logic in pure, testable functions outside React:
+  - `calculateDamage(move, attacker, defender)`
+  - `resolveTurn(playerMove, opponentMove, state)`
+  - `getTypeMatchup(moveType, defenderTypes)`
+  - `determineFirstActor(attackerSpeed, defenderSpeed)`
+
+### Not for MVP
+- Redux, Context API (useState is sufficient)
+- Persistent battle history or replay system
+- Animations library beyond CSS transforms
 
 ### Future-Proofing
 - **Battle Logic:** Extract to separate file/function so it can be reused for:
@@ -286,11 +342,51 @@ Pokédex (existing) → Game Feature (new)
 
 ---
 
+## MVP Acceptance Criteria
+
+A battle is shippable when:
+
+**Core Gameplay:**
+- [x] A battle can start using only local data (no required API calls)
+- [x] Player can select their Pokémon from the Pokédex or random option
+- [x] Opponent is assigned a random Pokémon
+- [x] Each Pokémon has 2-4 valid, curated moves
+- [x] Player can select only an available move while battle is in `player_select` phase
+- [x] Speed stat correctly determines turn order (attacker goes first if higher, defender first on tie)
+- [x] Damage is calculated using the exact formula specified above
+- [x] Dual-type effectiveness is calculated correctly (multiplied)
+- [x] A Pokémon with 0 HP faints immediately and cannot act
+- [x] Battle ends exactly once
+- [x] Winner, turns taken, and total damage dealt are displayed
+- [x] Player can reset and start a new battle without page reload
+
+**Visual & Interactive:**
+- [x] Both Pokémon sprites visible side-by-side
+- [x] Health bars animate smoothly from current to new HP
+- [x] Damage numbers appear as floating text on hit
+- [x] Type advantage/disadvantage is clearly indicated (colors or badges)
+- [x] Move buttons are disabled outside of `player_select` phase
+- [x] Move buttons are keyboard-operable (Tab, Enter)
+- [x] Focus visible on interactive elements
+- [x] Current turn and active Pokémon are clearly shown
+
+**Robustness:**
+- [x] Type matchups (neutral, super-effective, resistant, immune) are all correct
+- [x] Minimum damage of 1 is enforced
+- [x] Speed tie always resolves consistently (defender first)
+- [x] Game handles missing sprites gracefully
+- [x] No console errors during a full battle flow
+- [x] Mobile viewport (320px-1200px) renders without horizontal scroll
+
+**Testing:**
+- [x] Pure damage calculation function has >90% coverage
+- [x] Type matchup table is verified for all type combinations
+- [x] Turn resolution includes tests for knockouts, order, and minimum damage
+
 ## Future Considerations
 
 ### Level 2+ Features (Not in MVP)
 - [ ] Move accuracy/critical hits
-- [ ] Move accuracy stat (doesn't always hit)
 - [ ] Abilities and hidden abilities
 - [ ] Status effects (burn, paralyze, poison, sleep, freeze)
 - [ ] Stat changes (ATK up/down, DEF up/down, Speed up/down)
@@ -298,6 +394,9 @@ Pokédex (existing) → Game Feature (new)
 - [ ] Recoil damage, healing moves
 - [ ] Protection moves (reduce damage next turn)
 - [ ] Multi-turn moves (charge up then attack)
+- [ ] Live move data fetching from PokeAPI
+- [ ] Battle replay and sharing
+- [ ] Sound effects and background music
 
 ### Level 3+ Features (Far Future)
 - [ ] 6v6 team battles with switching
@@ -375,4 +474,41 @@ Pokédex (existing) → Game Feature (new)
 ---
 
 **Document Created:** 2026-09-22  
-**Status:** Requirements Brainstorm Complete - Ready for Implementation Planning
+**Last Updated:** 2026-09-29  
+**Status:** MVP Specification Complete - Ready for Implementation
+
+---
+
+## Implementation Checklist
+
+### Phase 1: Setup & Core Logic (Week 1)
+- [ ] Create `src/battle/` module with pure functions:
+  - [ ] `calculateDamage.js` (with tests)
+  - [ ] `typeMatchup.js` (type effectiveness table + lookup)
+  - [ ] `resolveTurn.js` (turn order, damage application)
+  - [ ] `battleState.js` (state machine logic)
+- [ ] Create curated move catalog in `src/data/moves.json`
+- [ ] Create test file with damage formula test cases
+
+### Phase 2: React Components (Week 2)
+- [ ] Build `BattleSetup.js` (Pokémon selection)
+- [ ] Build `Battle.js` (state machine container)
+- [ ] Build `BattleArena.js` (Pokémon display)
+- [ ] Build `MoveSelector.js` (move buttons with keyboard support)
+- [ ] Build `HealthBar.js` (animated bar)
+- [ ] Build `DamageIndicator.js` (floating damage text)
+- [ ] Build `BattleResults.js` (winner screen)
+
+### Phase 3: Polish & Testing (Week 3)
+- [ ] Add mobile responsiveness
+- [ ] Implement type-based color indicators
+- [ ] Add animation for health bar depletion
+- [ ] Test all type matchups manually
+- [ ] Test edge cases (knockouts, ties, minimum damage)
+- [ ] Accessibility: keyboard navigation, focus states, ARIA labels
+
+### Phase 4: Integration (Week 4)
+- [ ] Link from Pokédex detail view to battle
+- [ ] Cache Pokémon data from Pokédex
+- [ ] Error handling and graceful degradation
+- [ ] Performance review
