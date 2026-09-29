@@ -1,0 +1,127 @@
+/* Pokemon Attack Animations */
+
+/* Shake animation when Pokemon gets hit */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-5px); }
+  20% { transform: translateX(5px); }
+  30% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  50% { transform: translateX(-5px); }
+  60% { transform: translateX(5px); }
+  70% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+  90% { transform: translateX(-5px); }
+}
+
+/* Damage flash - red damage effect */
+@keyframes damageFlash {
+  0%, 100% { filter: brightness(1) drop-shadow(0 0 0 rgba(255,0,0,0)); }
+  50% { filter: brightness(1.2) drop-shadow(0 0 15px rgba(255,0,0,0.8)); }
+}
+
+/* Healing glow - green glow effect */
+@keyframes healGlow {
+  0%, 100% { filter: brightness(1) drop-shadow(0 0 0 rgba(76,175,80,0)); }
+  50% { filter: brightness(1.1) drop-shadow(0 0 20px rgba(76,175,80,0.8)); }
+}
+
+/* Attack pulse - Pokemon prepares attack */
+@keyframes attackPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Win glow - victory effect */
+@keyframes victoryGlow {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(255,215,0,0)); }
+  50% { filter: drop-shadow(0 0 20px rgba(255,215,0,0.8)); }
+}
+
+/* Floating damage numbers */
+@keyframes floatUp {
+  0% { 
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% { 
+    transform: translateY(-60px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* Type effectiveness highlight */
+@keyframes typeEffectiveFlash {
+  0% { background-color: rgba(76, 175, 80, 0); }
+  50% { background-color: rgba(76, 175, 80, 0.3); }
+  100% { background-color: rgba(76, 175, 80, 0); }
+}
+
+@keyframes typeResistFlash {
+  0% { background-color: rgba(255, 152, 0, 0); }
+  50% { background-color: rgba(255, 152, 0, 0.3); }
+  100% { background-color: rgba(255, 152, 0, 0); }
+}
+
+/* Apply animation classes */
+
+.pokemon-attacked {
+  animation: shake 0.4s ease-in-out;
+}
+
+.pokemon-damaged {
+  animation: damageFlash 0.5s ease-in-out;
+}
+
+.pokemon-healed {
+  animation: healGlow 0.6s ease-in-out;
+}
+
+.pokemon-attacking {
+  animation: attackPulse 0.4s ease-in-out;
+}
+
+.pokemon-victory {
+  animation: victoryGlow 1s ease-in-out;
+}
+
+.pokemon-defeat {
+  animation: shake 0.8s ease-in-out;
+  opacity: 0.6;
+}
+
+/* Floating damage text styles */
+.floating-damage {
+  position: fixed;
+  font-size: 32px;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 100;
+  animation: floatUp 1.5s ease-out forwards;
+}
+
+.floating-damage.damage {
+  color: #ff6b6b;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.floating-damage.heal {
+  color: #4caf50;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .pokemon-attacked,
+  .pokemon-damaged,
+  .pokemon-healed,
+  .pokemon-attacking,
+  .pokemon-victory,
+  .pokemon-defeat,
+  .floating-damage {
+    animation: none;
+  }
+}
