@@ -1,5 +1,7 @@
 # Level 1 Battle System - Implementation Complete ✅
 
+> ⚠️ **Outdated (Sep 30, 2026).** Parts of this document describe code that doesn't exist in the repo (e.g. a 30-move catalog, `getDualTypeMatchup`, `testDamageCalculation`, `generateBattleSummary`). For the current state see `IMPLEMENTATION_STATUS.md`, `PHASE2_COMPLETION.md` and `QUICK_REFERENCE.md`.
+
 **Status:** Implementation ready for integration and testing  
 **Date:** 2026-09-30  
 **Specification:** Based on `level1_game_mechanics.md` with GPT critique improvements

@@ -1,5 +1,7 @@
 # Level 1 Battle System - Build Complete ✅
 
+> ⚠️ **Outdated (Sep 30, 2026).** Parts of this document describe code that doesn't exist in the repo (e.g. a 30-move `moveCatalog.js` and a 10-Pokémon `pokemonCatalog.js`. Both were empty stubs; `pokemonCatalog.js` was filled in during Phase 2 and `moveCatalog.js` is still a stub). For the current state see `IMPLEMENTATION_STATUS.md`, `PHASE2_COMPLETION.md` and `QUICK_REFERENCE.md`.
+
 **Date:** 2026-09-30  
 **Status:** Ready for integration and testing
 
