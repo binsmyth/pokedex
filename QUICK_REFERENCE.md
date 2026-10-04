@@ -159,10 +159,9 @@ npm test
 
 ### Remaining Tasks
 1. Edge case tests for very long battles
-2. Type effectiveness visual feedback (color cues, not just log text)
-3. Accessibility: keyboard navigation, ARIA labels, not color-only
-4. Smarter opponent move choice (currently random)
-5. Upgrade `@testing-library/react` to v13+ (removes the React 18 `ReactDOM.render` warning in tests)
+2. Accessibility: keyboard navigation, ARIA labels, not color-only
+3. Smarter opponent move choice (currently random)
+4. Upgrade `@testing-library/react` to v13+ (removes the React 18 `ReactDOM.render` warning in tests)
 
 ---
 
@@ -179,7 +178,7 @@ npm test
 | Roster | 4 hardcoded | 14 in catalog | ✅ Complete |
 | Validation | ❌ | ✅ At battle setup | ✅ Complete |
 | Results screen | ⚠️ Win/lose only | ✅ Stats table | ✅ Complete |
-| Tests | ❌ None | ✅ 391 | ✅ Complete |
+| Tests | ❌ None | ✅ 393 | ✅ Complete |
 
 ---
 

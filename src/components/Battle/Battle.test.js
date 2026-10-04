@@ -108,12 +108,45 @@ test('plays a full battle with a fixed opponent move and shows the results', () 
   expect(screen.getByText('Damage taken').closest('tr')).toHaveTextContent(/^Damage taken86280$/);
 });
 
-test('no-effect moves deal 0 damage', () => {
-  render(<Battle random={() => 0} />); // Pikachu always uses Thunderbolt
+test('no-effect moves deal 0 damage and are shown as "No effect"', () => {
+  const { container } = render(<Battle random={() => 0} />); // Gengar always uses Shadow Ball
   pickPlayer('Pikachu');
   pickOpponent('Gengar');
   fireEvent.click(screen.getByText(/Start Battle/));
 
   playTurn('Quick Attack (40 power)');
-  expect(screen.getByText(/Pikachu uses Quick Attack! No effect! Deals 0 damage!/)).toBeTruthy();
+  const logLine = screen.getByText(/Pikachu uses Quick Attack! No effect! Deals 0 damage!/);
+  expect(logLine).toHaveClass('battle-log-immune');
+  expect(container.querySelector('.floating-damage.immune')).toHaveTextContent(/^No effect$/);
+  expect(screen.getByText('Damage: 0 (No Effect)')).toBeInTheDocument();
+  // Gengar's neutral Shadow Ball: 80 * (130 / 75) = 138
+  expect(screen.getByText(/Gengar uses Shadow Ball! Deals 138 damage!/)).toHaveClass('battle-log-neutral');
+  expect(container.querySelector('.floating-damage.neutral')).toHaveTextContent(/^-138$/);
+});
+
+test('super effective hits get the highlighted styles', () => {
+  const { container } = render(<Battle random={() => 0} />); // Gyarados always uses Waterfall
+  pickPlayer('Pikachu');
+  pickOpponent('Gyarados');
+  fireEvent.click(screen.getByText(/Start Battle/));
+
+  // Electric vs Water/Flying = 4x: 90 * (65 / 79) * 4 = 296
+  playTurn('Thunderbolt (90 power)');
+  const logLine = screen.getByText(/Pikachu uses Thunderbolt! Super effective! \(4x\) Deals 296 damage!/);
+  expect(logLine).toHaveClass('battle-log-super');
+  expect(container.querySelector('.floating-damage.super')).toHaveTextContent(/^-296$/);
+  expect(screen.getByText('Damage: 296 (Super Effective!)')).toBeInTheDocument();
+});
+
+test('resisted hits get the muted styles', () => {
+  const { container } = render(<Battle random={() => 0} />);
+  pickPlayer('Pikachu');
+  pickOpponent('Venusaur');
+  fireEvent.click(screen.getByText(/Start Battle/));
+
+  // Electric vs Grass/Poison = 0.5x: 90 * (65 / 83) * 0.5 = 35
+  playTurn('Thunderbolt (90 power)');
+  expect(screen.getByText(/Pikachu uses Thunderbolt! Not very effective\.\.\. \(0.5x\) Deals 35 damage!/)).toHaveClass('battle-log-resisted');
+  expect(container.querySelector('.floating-damage.resisted')).toHaveTextContent(/^-35$/);
+  expect(screen.getByText('Damage: 35 (Not Very Effective)')).toBeInTheDocument();
 });

@@ -71,7 +71,7 @@
 - ✅ Sound integration for moves, damage types, victory/defeat
 
 ### 8. **Tests**
-- ✅ 391 Jest tests across 6 files (`npm test`)
+- ✅ 393 Jest tests across 6 files (`npm test`)
 
 ---
 
@@ -148,7 +148,7 @@ Correct values (verified by tests):
 
 ### UI/UX Polish
 - [x] **Speed indicator** ("💨 Garchomp moves first (Speed 102 vs 100)")
-- [ ] **Type effectiveness feedback** (sound + log text exist; no color/visual cue yet)
+- [x] **Type effectiveness feedback** (colored floating numbers, log stripes, damage banner and hit flash, alongside the log text)
 - [x] **Battle results screen** (winner, turns, damage dealt/taken)
 - [ ] **Accessibility** (keyboard nav, ARIA labels, not color-only)
 
@@ -192,7 +192,7 @@ Also done in Phase 2: Battle.js integration, speed indicator, test suite, type l
 
 ### Phase 4: Polish & UX (Sprint 4) - In progress
 1. ✅ Add speed indicator (static banner; no animation)
-2. ❌ Add type effectiveness visual feedback
+2. ✅ Add type effectiveness visual feedback
 3. ✅ Build detailed battle results screen
 4. ❌ Improve accessibility
 5. ❌ Fine-tune animations and timing
@@ -223,11 +223,10 @@ Also done in Phase 2: Battle.js integration, speed indicator, test suite, type l
 
 ## 🚀 Next Immediate Steps
 
-1. **Type effectiveness visual cue** (e.g. color the log line / floating number by effectiveness)
-2. **Accessibility pass** - keyboard focus states, ARIA labels on move buttons and HP bars, live region for the battle log
-3. **Long-battle edge case test** (e.g. two high-defense Pokémon using resisted moves)
-4. **Upgrade `@testing-library/react` to v13+** (removes React 18 warning in tests)
-5. **Smarter opponent** (prefer super-effective moves instead of random)
+1. **Accessibility pass** - keyboard focus states, ARIA labels on move buttons and HP bars, live region for the battle log
+2. **Long-battle edge case test** (e.g. two high-defense Pokémon using resisted moves)
+3. **Upgrade `@testing-library/react` to v13+** (removes React 18 warning in tests)
+4. **Smarter opponent** (prefer super-effective moves instead of random)
 
 ---
 
@@ -238,4 +237,4 @@ Also done in Phase 2: Battle.js integration, speed indicator, test suite, type l
 - `src/data/moveCatalog.js` is still a stub; moves are defined per Pokémon.
 - Build has two pre-existing lint warnings (unused `useEffect` in `Battle.js`, unused `audioCache` in `audio.js`).
 
-**Status:** Level 1 core is spec-compliant and tested. Remaining work is polish (visual feedback, accessibility) and one edge-case test.
+**Status:** Level 1 core is spec-compliant and tested. Remaining work is accessibility and one edge-case test.

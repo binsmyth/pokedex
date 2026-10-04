@@ -18,6 +18,21 @@ const describeAttack = (entry) => {
   return message;
 };
 
+// Colors pair with the log text ("Super effective!" etc.) so meaning isn't color-only
+const EFFECTIVENESS = {
+  super: { label: 'Super Effective!', color: '#ffd93d', background: 'rgba(255, 217, 61, 0.3)', flash: 'type-effective-flash' },
+  neutral: { label: 'Neutral', color: '#ffffff', background: 'rgba(255, 255, 255, 0.15)', flash: null },
+  resisted: { label: 'Not Very Effective', color: '#cfd8dc', background: 'rgba(144, 164, 174, 0.3)', flash: 'type-resist-flash' },
+  immune: { label: 'No Effect', color: '#b0bec5', background: 'rgba(96, 125, 139, 0.3)', flash: 'type-resist-flash' }
+};
+
+const getEffectiveness = (entry) => {
+  if (entry.isImmune) return 'immune';
+  if (entry.isEffective) return 'super';
+  if (entry.isResisted) return 'resisted';
+  return 'neutral';
+};
+
 const SpeedIndicator = ({ playerName, opponentName, playerSpeed, opponentSpeed }) => {
   const { playerFirst } = determineTurnOrder(playerSpeed, opponentSpeed);
   const firstName = playerFirst ? playerName : opponentName;
@@ -68,9 +83,9 @@ export function Battle({ random = Math.random } = {}) {
     }, 500);
   };
   
-  const createFloatingDamage = (x, y, damage, type = 'damage') => {
+  const createFloatingDamage = (x, y, text, variant = 'neutral') => {
     const id = Math.random();
-    setFloatingDamages(prev => [...prev, { id, x, y, damage, type }]);
+    setFloatingDamages(prev => [...prev, { id, x, y, text, variant }]);
     
     setTimeout(() => {
       setFloatingDamages(prev => prev.filter(d => d.id !== id));
@@ -130,17 +145,21 @@ export function Battle({ random = Math.random } = {}) {
     
     const showAttack = (entry) => {
       const defenderRef = entry.actor === 'player' ? opponentPokemonRef : playerPokemonRef;
+      const effectiveness = getEffectiveness(entry);
       
-      newLog.push(describeAttack(entry));
+      newLog.push({ text: describeAttack(entry), effectiveness });
       setBattleLog([...newLog]);
       
       // Play damage sound and trigger animation
       playSoundForDamage(entry.isEffective, entry.isResisted, entry.isImmune);
       triggerAnimation(defenderRef, 'pokemon-damaged');
+      if (EFFECTIVENESS[effectiveness].flash) {
+        triggerAnimation(defenderRef, EFFECTIVENESS[effectiveness].flash);
+      }
       
       if (entry.actor === 'player') {
         setOpponentHP(entry.defenderHP);
-        setLastDamage({ damage: entry.damage, effective: entry.isEffective ? 'Super Effective!' : entry.isResisted ? 'Not Very Effective' : entry.isImmune ? 'No Effect' : 'Neutral' });
+        setLastDamage({ damage: entry.damage, effectiveness });
       } else {
         setPlayerHP(entry.defenderHP);
       }
@@ -148,7 +167,7 @@ export function Battle({ random = Math.random } = {}) {
       // Create floating damage number for the defender
       if (defenderRef.current) {
         const rect = defenderRef.current.getBoundingClientRect();
-        createFloatingDamage(rect.x + rect.width / 2, rect.y, entry.damage, 'damage');
+        createFloatingDamage(rect.x + rect.width / 2, rect.y, entry.isImmune ? 'No effect' : '-' + entry.damage, effectiveness);
       }
     };
     
@@ -233,8 +252,8 @@ export function Battle({ random = Math.random } = {}) {
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '20px', color: 'white' }}>
       {floatingDamages.map(dmg => (
-        <div key={dmg.id} className={`floating-damage ${dmg.type}`} style={{ left: dmg.x, top: dmg.y }}>
-          -{dmg.damage}
+        <div key={dmg.id} className={`floating-damage ${dmg.variant}`} style={{ left: dmg.x, top: dmg.y }}>
+          {dmg.text}
         </div>
       ))}
       
@@ -269,15 +288,15 @@ export function Battle({ random = Math.random } = {}) {
         </div>
         
         {lastDamage && (
-          <div style={{ backgroundColor: 'rgba(255, 200, 50, 0.3)', padding: '10px', borderRadius: '6px', marginBottom: '15px', textAlign: 'center' }}>
-            <p style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: '#ffd93d' }}>Damage: {lastDamage.damage} ({lastDamage.effective})</p>
+          <div style={{ backgroundColor: EFFECTIVENESS[lastDamage.effectiveness].background, padding: '10px', borderRadius: '6px', marginBottom: '15px', textAlign: 'center' }}>
+            <p style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: EFFECTIVENESS[lastDamage.effectiveness].color }}>Damage: {lastDamage.damage} ({EFFECTIVENESS[lastDamage.effectiveness].label})</p>
           </div>
         )}
         
         {battleLog.length > 0 && (
           <div style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '6px', marginBottom: '15px', maxHeight: '100px', overflowY: 'auto' }}>
             {battleLog.slice(-3).map((log, i) => (
-              <p key={i} style={{ margin: '5px 0', fontSize: '12px' }}>{log}</p>
+              <p key={i} className={`battle-log-${log.effectiveness}`} style={{ margin: '5px 0', padding: '2px 0 2px 8px', fontSize: '12px', borderLeft: '4px solid ' + EFFECTIVENESS[log.effectiveness].color, color: log.effectiveness === 'neutral' ? 'white' : EFFECTIVENESS[log.effectiveness].color, fontWeight: log.effectiveness === 'super' ? 'bold' : 'normal' }}>{log.text}</p>
             ))}
           </div>
         )}
