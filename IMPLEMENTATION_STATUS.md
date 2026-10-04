@@ -71,7 +71,7 @@
 - ✅ Sound integration for moves, damage types, victory/defeat
 
 ### 8. **Tests**
-- ✅ 393 Jest tests across 6 files (`npm test`)
+- ✅ 396 Jest tests across 6 files (`npm test`)
 
 ---
 
@@ -150,7 +150,7 @@ Correct values (verified by tests):
 - [x] **Speed indicator** ("💨 Garchomp moves first (Speed 102 vs 100)")
 - [x] **Type effectiveness feedback** (colored floating numbers, log stripes, damage banner and hit flash, alongside the log text)
 - [x] **Battle results screen** (winner, turns, damage dealt/taken)
-- [ ] **Accessibility** (keyboard nav, ARIA labels, not color-only)
+- [x] **Accessibility** (focus management, visible focus ring, ARIA roles/labels, live battle log, AA-contrast buttons, selection not color-only)
 
 ### Performance & Data
 - [x] **Cache type chart** (N/A: the chart is a static module, not fetched)
@@ -194,7 +194,7 @@ Also done in Phase 2: Battle.js integration, speed indicator, test suite, type l
 1. ✅ Add speed indicator (static banner; no animation)
 2. ✅ Add type effectiveness visual feedback
 3. ✅ Build detailed battle results screen
-4. ❌ Improve accessibility
+4. ✅ Improve accessibility
 5. ❌ Fine-tune animations and timing
 
 **Deliverable:** Polished, accessible, fully-featured battle system
@@ -223,10 +223,9 @@ Also done in Phase 2: Battle.js integration, speed indicator, test suite, type l
 
 ## 🚀 Next Immediate Steps
 
-1. **Accessibility pass** - keyboard focus states, ARIA labels on move buttons and HP bars, live region for the battle log
-2. **Long-battle edge case test** (e.g. two high-defense Pokémon using resisted moves)
-3. **Upgrade `@testing-library/react` to v13+** (removes React 18 warning in tests)
-4. **Smarter opponent** (prefer super-effective moves instead of random)
+1. **Long-battle edge case test** (e.g. two high-defense Pokémon using resisted moves)
+2. **Upgrade `@testing-library/react` to v13+** (removes React 18 warning in tests)
+3. **Smarter opponent** (prefer super-effective moves instead of random)
 
 ---
 
@@ -235,6 +234,7 @@ Also done in Phase 2: Battle.js integration, speed indicator, test suite, type l
 - Pokémon data is a curated static catalog, not fetched from PokeAPI. Attack uses the higher of Attack / Sp. Atk.
 - The opponent picks moves at random, so some matchups are lopsided (e.g. Garchomp's Earthquake does nothing to Flying types).
 - `src/data/moveCatalog.js` is still a stub; moves are defined per Pokémon.
-- Build has two pre-existing lint warnings (unused `useEffect` in `Battle.js`, unused `audioCache` in `audio.js`).
+- Build has one pre-existing lint warning (unused `audioCache` in `audio.js`).
+- The purple page gradient's light end (`#667eea`) gives white text 3.7:1 contrast, below the 4.5:1 AA target for small text. Buttons were darkened to pass; the background was left as is.
 
-**Status:** Level 1 core is spec-compliant and tested. Remaining work is accessibility and one edge-case test.
+**Status:** Level 1 core is spec-compliant and tested. Remaining work is one edge-case test and animation tuning.

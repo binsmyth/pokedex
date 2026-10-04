@@ -150,3 +150,67 @@ test('resisted hits get the muted styles', () => {
   expect(container.querySelector('.floating-damage.resisted')).toHaveTextContent(/^-35$/);
   expect(screen.getByText('Damage: 35 (Not Very Effective)')).toBeInTheDocument();
 });
+
+describe('accessibility', () => {
+  test('selected pokemon are exposed with aria-pressed, not just color', () => {
+    render(<Battle />);
+    pickPlayer('Gengar');
+
+    const [playerButton, opponentButton] = screen.getAllByRole('button', { name: /Gengar \(Ghost\/Poison\)/ });
+    expect(playerButton).toHaveAttribute('aria-pressed', 'true');
+    expect(playerButton).toHaveTextContent(/^✓ Gengar/);
+    expect(opponentButton).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('group', { name: 'Your Pokemon' })).toContainElement(playerButton);
+  });
+
+  test('focus follows the battle flow so keyboard users never lose their place', () => {
+    render(<Battle random={() => 0.5} />);
+    pickPlayer('Gengar');
+    pickOpponent('Pikachu');
+    fireEvent.click(screen.getByText(/Start Battle/));
+    expect(screen.getByRole('heading', { name: 'Battle!' })).toHaveFocus();
+
+    fireEvent.click(screen.getByText('Shadow Ball (80 power)'));
+    expect(screen.getByRole('button', { name: /Resolve Attacks/ })).toHaveFocus();
+
+    fireEvent.click(screen.getByText(/Resolve Attacks/));
+    act(() => {
+      jest.advanceTimersByTime(400);
+    });
+    expect(screen.getByRole('button', { name: 'Shadow Ball (80 power)' })).toHaveFocus();
+
+    playTurn('Shadow Ball (80 power)');
+    playTurn('Shadow Ball (80 power)');
+    expect(screen.getByRole('button', { name: 'Reset Battle' })).toHaveFocus();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Battle' }));
+    expect(screen.getByRole('heading', { name: 'Battle!' })).toHaveFocus();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back to Selection' }));
+    expect(screen.getByRole('heading', { name: 'Select Pokemon for Battle' })).toHaveFocus();
+  });
+
+  test('HP bars, battle log and results are exposed to assistive tech', () => {
+    render(<Battle random={() => 0.5} />);
+    pickPlayer('Gengar');
+    pickOpponent('Pikachu');
+    fireEvent.click(screen.getByText(/Start Battle/));
+
+    const pikachuHP = screen.getByRole('progressbar', { name: 'Pikachu HP' });
+    expect(pikachuHP).toHaveAttribute('aria-valuenow', '280');
+    expect(pikachuHP).toHaveAttribute('aria-valuemax', '280');
+
+    playTurn('Shadow Ball (80 power)');
+    expect(pikachuHP).toHaveAttribute('aria-valuenow', '142');
+    expect(pikachuHP).toHaveAttribute('aria-valuetext', '142 of 280 HP');
+    expect(screen.getByRole('log', { name: 'Battle log' })).toHaveTextContent('Gengar uses Shadow Ball!');
+    expect(screen.getByRole('status')).toHaveTextContent('Battle in Progress...');
+
+    playTurn('Shadow Ball (80 power)');
+    playTurn('Shadow Ball (80 power)');
+    expect(screen.getByRole('status')).toHaveTextContent('You Won!');
+    const table = screen.getByRole('table', { name: 'Battle statistics' });
+    expect(table).toContainElement(screen.getByRole('rowheader', { name: 'Damage dealt' }));
+    expect(screen.getByRole('columnheader', { name: 'Gengar' })).toBeInTheDocument();
+  });
+});

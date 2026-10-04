@@ -1,1 +1,12 @@
 .battle-container { width: 100%; }
+
+/* Keyboard focus: high-contrast ring on the purple background */
+.battle-button:focus-visible {
+  outline: 3px solid #ffd93d;
+  outline-offset: 3px;
+}
+
+/* Headings receive focus programmatically when the screen changes; no ring needed */
+.battle-heading:focus {
+  outline: none;
+}

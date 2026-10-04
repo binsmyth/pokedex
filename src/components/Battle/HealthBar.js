@@ -14,7 +14,14 @@ export function HealthBar({ pokemon, maxHP, currentHP }) {
       <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '5px' }}>
         {pokemon} | HP: {currentHP}/{maxHP}
       </div>
-      <div style={{
+      <div
+        role="progressbar"
+        aria-label={`${pokemon} HP`}
+        aria-valuemin={0}
+        aria-valuemax={maxHP}
+        aria-valuenow={currentHP}
+        aria-valuetext={`${currentHP} of ${maxHP} HP`}
+        style={{
         width: '100%',
         height: '20px',
         backgroundColor: '#ccc',

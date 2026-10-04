@@ -6,7 +6,7 @@ const countHits = (battleLog, actor, flag) =>
 
 const StatRow = ({ label, player, opponent }) => (
   <tr>
-    <td style={{ padding: '4px 8px', textAlign: 'left', opacity: 0.8 }}>{label}</td>
+    <th scope="row" style={{ padding: '4px 8px', textAlign: 'left', opacity: 0.8, fontWeight: 'normal' }}>{label}</th>
     <td style={{ padding: '4px 8px', fontWeight: 'bold' }}>{player}</td>
     <td style={{ padding: '4px 8px', fontWeight: 'bold' }}>{opponent}</td>
   </tr>
@@ -35,11 +35,12 @@ export function BattleResults({ battleState, playerName, opponentName }) {
         {winner === 'player' ? playerName : opponentName} wins in {currentTurn} {currentTurn === 1 ? 'turn' : 'turns'}!
       </h3>
       <table style={{ margin: '0 auto', borderCollapse: 'collapse', fontSize: '14px' }}>
+        <caption style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>Battle statistics</caption>
         <thead>
           <tr>
-            <th></th>
-            <th style={{ padding: '4px 8px' }}>{playerName}</th>
-            <th style={{ padding: '4px 8px' }}>{opponentName}</th>
+            <td></td>
+            <th scope="col" style={{ padding: '4px 8px' }}>{playerName}</th>
+            <th scope="col" style={{ padding: '4px 8px' }}>{opponentName}</th>
           </tr>
         </thead>
         <tbody>
