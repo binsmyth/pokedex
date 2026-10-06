@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import SearchBar from '../SearchBar/SearchBar';
 import PokeSelect from './PokeSelect';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { Grid, Container, Stack, Pagination, Space, Input, Flex, Loader, createStyles, MediaQuery, Center, Button, Group } from '@mantine/core';
 import FrontPage from './FrontPage';
 import pokeapi from '../api/pokeapi';
 import { MantineProvider } from '@mantine/core';
 import themes from './themes/themes';
-import { Battle } from './Battle';
 
 // import { ExampleContext } from './ModalContext';
 const App=() => {
@@ -17,8 +16,7 @@ const App=() => {
   const pagecount = Math.ceil(responseCount/limit);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false); //loader spinner need to make it better later on
-  const [openModal, setOpenModal] = useState(false);
-  const [showBattle, setShowBattle] = useState(false);
+  const navigate = useNavigate();
   console.log("working");
   const useStyles = createStyles((theme) => ({
     grid:{
@@ -58,7 +56,7 @@ const App=() => {
     }
     return(
       <>
-        <FrontPage pokeData={pokeData} setOpenModal={setOpenModal}/>
+        <FrontPage pokeData={pokeData}/>
         <Space h="md" />
         <Pagination total={pagecount} boundaries={1} size="xs" onChange={setPage} page={page} />
         <Space h="md" />
@@ -82,25 +80,6 @@ const App=() => {
     getPokeImageUrl((page - 1) * 6,limit);
   },[page])
 
-  if (showBattle) {
-    return (
-      <MantineProvider theme={themes}>
-        <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-          <Button
-            onClick={() => setShowBattle(false)}
-            style={{ position: 'fixed', top: 20, left: 20, zIndex: 999 }}
-            variant="filled"
-            color="gray"
-            size="lg"
-          >
-            ← Back to Pokédex
-          </Button>
-          <Battle />
-        </div>
-      </MantineProvider>
-    );
-  }
-
   return (
     <MantineProvider theme={themes}>
       <Center>
@@ -109,7 +88,7 @@ const App=() => {
           <Group position="center" spacing="md" mb="md">
             <SearchBar />
             <Button
-              onClick={() => setShowBattle(true)}
+              onClick={() => navigate('/battle')}
               variant="gradient"
               gradient={{ from: '#667eea', to: '#764ba2', deg: 135 }}
               size="md"
@@ -123,7 +102,7 @@ const App=() => {
         <Grid columns={12} mt="5vh" p={40} className={classes.grid} bg="#ffff" >
             <MediaQuery smallerThan="sm" styles={{display:'none'}}>
               <Grid.Col md={6} lg={7} sm={0} span={6} >
-                {<Outlet context={[openModal,setOpenModal]}/>}
+                {<Outlet />}
               </Grid.Col>
             </MediaQuery>
             

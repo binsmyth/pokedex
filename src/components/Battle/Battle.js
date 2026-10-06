@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { HealthBar } from './HealthBar';
 import { calculateDamage } from '../../battle/damage';
-import { playSound, playSoundForDamage, playEndSound, SOUNDS } from '../../utils/audio';
+import { startBattleMusic, stopBattleMusic } from '../../utils/audio';
 import './animations.css';
 
-export function Battle() {
+export function Battle({ onExit }) {
   const [showBattle, setShowBattle] = useState(false);
   const [playerHP, setPlayerHP] = useState(0);
   const [opponentHP, setOpponentHP] = useState(0);
@@ -17,6 +17,18 @@ export function Battle() {
   
   const playerPokemonRef = useRef(null);
   const opponentPokemonRef = useRef(null);
+  const battleHistoryPushed = useRef(false);
+
+  useEffect(() => {
+    const handleBrowserBack = () => {
+      if (battleHistoryPushed.current) {
+        battleHistoryPushed.current = false;
+        setShowBattle(false);
+      }
+    };
+    window.addEventListener('popstate', handleBrowserBack);
+    return () => window.removeEventListener('popstate', handleBrowserBack);
+  }, []);
   
   const pokemonData = {
     'Pikachu': { 
@@ -81,7 +93,7 @@ export function Battle() {
   
   const handleStartBattle = () => {
     if (selectedPlayer && selectedOpponent) {
-      playSound(SOUNDS.MOVE_SELECT);
+      startBattleMusic();
       setPlayerHP(pokemonData[selectedPlayer].hp);
       setOpponentHP(pokemonData[selectedOpponent].hp);
       setBattleLog([]);
@@ -89,14 +101,15 @@ export function Battle() {
       setSelectedPlayerMove(null);
       setSelectedOpponentMove(null);
       setWaitingForResolve(false);
+      window.history.pushState({ battle: true }, '', window.location.href);
+      battleHistoryPushed.current = true;
       setShowBattle(true);
     }
   };
   
   const handleSelectMove = (playerMoveIndex) => {
     if (playerHP <= 0 || opponentHP <= 0) return;
-    
-    playSound(SOUNDS.MOVE_SELECT);
+
     const opponentMoveIndex = Math.floor(Math.random() * pokemonData[selectedOpponent].moves.length);
     
     // Trigger attack pulse animation for player
@@ -129,8 +142,7 @@ export function Battle() {
     message1 += ' Deals ' + playerResult.damage + ' damage!';
     newLog.push(message1);
     
-    // Play damage sound and trigger animation
-    playSoundForDamage(playerResult.isSuperEffective, playerResult.isNotVeryEffective, playerResult.isImmune);
+    // Trigger animation
     if (opponentPokemonRef.current) {
       triggerAnimation(opponentPokemonRef, 'pokemon-damaged');
     }
@@ -156,8 +168,7 @@ export function Battle() {
         newLog.push(message2);
         setBattleLog(newLog);
         
-        // Play damage sound and trigger animation
-        playSoundForDamage(opponentResult.isSuperEffective, opponentResult.isNotVeryEffective, opponentResult.isImmune);
+        // Trigger animation
         if (playerPokemonRef.current) {
           triggerAnimation(playerPokemonRef, 'pokemon-damaged');
         }
@@ -173,12 +184,10 @@ export function Battle() {
         
         // Check for battle end
         if (newPlayerHP === 0) {
-          playEndSound(false);
           if (playerPokemonRef.current) {
             triggerAnimation(playerPokemonRef, 'pokemon-defeat');
           }
         } else if (newOpponentHP === 0) {
-          playEndSound(true);
           if (opponentPokemonRef.current) {
             triggerAnimation(opponentPokemonRef, 'pokemon-victory');
           }
@@ -186,7 +195,6 @@ export function Battle() {
       }, 300);
     } else {
       // Opponent is defeated
-      playEndSound(true);
       if (opponentPokemonRef.current) {
         triggerAnimation(opponentPokemonRef, 'pokemon-victory');
       }
@@ -203,6 +211,9 @@ export function Battle() {
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '20px', color: 'white' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+          <button onClick={onExit} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: 'rgba(255,255,255,0.3)', border: 'none', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+            ← Back to Pokédex
+          </button>
           <h1 style={{ textAlign: 'center' }}>Select Pokemon for Battle</h1>
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginBottom: '30px' }}>
@@ -210,7 +221,7 @@ export function Battle() {
               <h2 style={{ textAlign: 'center', marginTop: 0 }}>Your Pokemon</h2>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
                 {Object.keys(pokemonData).map(pokemon => (
-                  <button key={pokemon} onClick={() => { setSelectedPlayer(pokemon); playSound(SOUNDS.MOVE_SELECT); }} style={{ padding: '15px', fontSize: '16px', backgroundColor: selectedPlayer === pokemon ? '#4caf50' : 'rgba(255,255,255,0.2)', border: selectedPlayer === pokemon ? '3px solid white' : '2px solid rgba(255,255,255,0.5)', color: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: 'all 0.2s' }}>
+                  <button key={pokemon} onClick={() => { setSelectedPlayer(pokemon); }} style={{ padding: '15px', fontSize: '16px', backgroundColor: selectedPlayer === pokemon ? '#4caf50' : 'rgba(255,255,255,0.2)', border: selectedPlayer === pokemon ? '3px solid white' : '2px solid rgba(255,255,255,0.5)', color: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: 'all 0.2s' }}>
                     {pokemon} ({pokemonData[pokemon].type}) - HP: {pokemonData[pokemon].hp}
                   </button>
                 ))}
@@ -221,7 +232,7 @@ export function Battle() {
               <h2 style={{ textAlign: 'center', marginTop: 0 }}>Opponent Pokemon</h2>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
                 {Object.keys(pokemonData).map(pokemon => (
-                  <button key={pokemon} onClick={() => { setSelectedOpponent(pokemon); playSound(SOUNDS.MOVE_SELECT); }} style={{ padding: '15px', fontSize: '16px', backgroundColor: selectedOpponent === pokemon ? '#ff9800' : 'rgba(255,255,255,0.2)', border: selectedOpponent === pokemon ? '3px solid white' : '2px solid rgba(255,255,255,0.5)', color: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: 'all 0.2s' }}>
+                  <button key={pokemon} onClick={() => { setSelectedOpponent(pokemon); }} style={{ padding: '15px', fontSize: '16px', backgroundColor: selectedOpponent === pokemon ? '#ff9800' : 'rgba(255,255,255,0.2)', border: selectedOpponent === pokemon ? '3px solid white' : '2px solid rgba(255,255,255,0.5)', color: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: 'all 0.2s' }}>
                     {pokemon} ({pokemonData[pokemon].type}) - HP: {pokemonData[pokemon].hp}
                   </button>
                 ))}
@@ -253,7 +264,7 @@ export function Battle() {
         </div>
       ))}
       
-      <button onClick={() => { setShowBattle(false); setBattleLog([]); setLastDamage(null); setSelectedPlayerMove(null); setSelectedOpponentMove(null); setWaitingForResolve(false); playSound(SOUNDS.MOVE_SELECT); }} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: 'rgba(255,255,255,0.3)', border: 'none', color: 'white', borderRadius: '6px', cursor: 'pointer', marginBottom: '20px', fontWeight: 'bold' }}>
+      <button onClick={() => { stopBattleMusic(); if (battleHistoryPushed.current) window.history.back(); else setShowBattle(false); setBattleLog([]); setLastDamage(null); setSelectedPlayerMove(null); setSelectedOpponentMove(null); setWaitingForResolve(false); }} style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: 'rgba(255,255,255,0.3)', border: 'none', color: 'white', borderRadius: '6px', cursor: 'pointer', marginBottom: '20px', fontWeight: 'bold' }}>
         Back to Selection
       </button>
       
@@ -326,10 +337,10 @@ export function Battle() {
         
         {(playerHP <= 0 || opponentHP <= 0) && (
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '15px' }}>
-            <button onClick={() => { setPlayerHP(pokemonData[selectedPlayer].hp); setOpponentHP(pokemonData[selectedOpponent].hp); setBattleLog([]); setLastDamage(null); setSelectedPlayerMove(null); setSelectedOpponentMove(null); setWaitingForResolve(false); playSound(SOUNDS.MOVE_SELECT); }} style={{ padding: '10px 20px', backgroundColor: '#ffd93d', border: 'none', color: '#333', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+            <button onClick={() => { startBattleMusic(); setPlayerHP(pokemonData[selectedPlayer].hp); setOpponentHP(pokemonData[selectedOpponent].hp); setBattleLog([]); setLastDamage(null); setSelectedPlayerMove(null); setSelectedOpponentMove(null); setWaitingForResolve(false); }} style={{ padding: '10px 20px', backgroundColor: '#ffd93d', border: 'none', color: '#333', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
               Reset Battle
             </button>
-            <button onClick={() => setShowBattle(false)} style={{ padding: '10px 20px', backgroundColor: '#9c27b0', border: 'none', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+            <button onClick={() => { stopBattleMusic(); setShowBattle(false); }} style={{ padding: '10px 20px', backgroundColor: '#9c27b0', border: 'none', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
               New Battle
             </button>
           </div>

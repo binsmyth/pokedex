@@ -30,7 +30,8 @@ const SearchBar = ({ onSubmit }) =>{
   };
 
   const handleChange = e =>{
-    setSearch({title: e.target.value});
+    // replace instead of push so typing doesn't flood browser history
+    setSearch({title: e.target.value}, { replace: true });
     form.setFieldValue('term', e.currentTarget.value);
   }
   return(

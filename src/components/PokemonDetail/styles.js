@@ -3,12 +3,10 @@ import { createStyles } from "@mantine/core";
 const useStyles=createStyles((theme) => ({
     Card:{
         width: '24vw',
-
-        [`@media (max-width:${theme.breakpoints.sm}px)`]:{
-            display:'none',
-        },
+        // Below md the card fills its grid column instead of being hidden:
+        // visibility is now decided in JS (card vs modal), not by CSS.
         [`@media (max-width:${theme.breakpoints.md}px)`]:{
-            display:'none',
+            width: '100%',
         },
     },
 
