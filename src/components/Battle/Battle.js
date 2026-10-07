@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { HealthBar } from './HealthBar';
 import { calculateDamage } from '../../battle/damage';
-import { startBattleMusic, stopBattleMusic } from '../../utils/audio';
+import { startBattleMusic, stopBattleMusic, toggleMuteMusic, isMusicMuted } from '../../utils/audio';
 import './animations.css';
 
 export function Battle({ onExit }) {
@@ -14,7 +14,8 @@ export function Battle({ onExit }) {
   const [selectedOpponentMove, setSelectedOpponentMove] = useState(null);
   const [waitingForResolve, setWaitingForResolve] = useState(false);
   const [floatingDamages, setFloatingDamages] = useState([]);
-  
+  const [isMusicMuted, setIsMusicMuted] = useState(false);
+
   const playerPokemonRef = useRef(null);
   const opponentPokemonRef = useRef(null);
   const battleHistoryPushed = useRef(false);
@@ -268,7 +269,7 @@ export function Battle({ onExit }) {
         Back to Selection
       </button>
       
-      <div style={{ maxWidth: '700px', margin: '0 auto', backgroundColor: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '10px' }}>
+      <div style={{ maxWidth: '700px', margin: '0 auto', backgroundColor: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '10px', position: 'relative' }}>
         <h1 style={{ textAlign: 'center', marginTop: 0 }}>Battle!</h1>
         
         <div style={{ backgroundColor: 'rgba(255,255,255,0.1)', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
@@ -350,6 +351,56 @@ export function Battle({ onExit }) {
           {playerHP === 0 && <p style={{ color: '#ff6b6b', fontSize: '18px' }}>You Lost!</p>}
           {opponentHP === 0 && <p style={{ color: '#4caf50', fontSize: '18px' }}>You Won!</p>}
           {playerHP > 0 && opponentHP > 0 && <p>Battle in Progress...</p>}
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '15px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <button
+            onClick={() => {
+              const newMutedState = toggleMuteMusic();
+              setIsMusicMuted(newMutedState);
+            }}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: isMusicMuted ? 'rgba(255, 100, 100, 0.5)' : 'rgba(100, 200, 255, 0.5)',
+              border: 'none',
+              color: 'white',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontWeight: 'bold',
+              transition: 'all 0.2s'
+            }}
+            title={isMusicMuted ? 'Unmute' : 'Mute'}
+          >
+            {isMusicMuted ? '🔇' : '🔊'}
+          </button>
+
+          <button
+            onClick={() => {
+              stopBattleMusic();
+              setIsMusicMuted(false);
+            }}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: 'rgba(255, 150, 100, 0.5)',
+              border: 'none',
+              color: 'white',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontWeight: 'bold',
+              transition: 'all 0.2s'
+            }}
+            title="Stop Music"
+          >
+            ⏹️
+          </button>
         </div>
       </div>
     </div>

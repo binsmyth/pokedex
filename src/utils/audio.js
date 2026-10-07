@@ -3,6 +3,7 @@
  */
 
 let backgroundMusic = null;
+let isMuted = false;
 
 export const startBattleMusic = () => {
   try {
@@ -15,6 +16,7 @@ export const startBattleMusic = () => {
     backgroundMusic.play().catch(error => {
       console.log('Could not play background music:', error.message);
     });
+    isMuted = false;
   } catch (error) {
     console.log('Error starting battle music:', error);
   }
@@ -26,4 +28,16 @@ export const stopBattleMusic = () => {
     backgroundMusic.currentTime = 0;
     backgroundMusic = null;
   }
+  isMuted = false;
 };
+
+export const toggleMuteMusic = () => {
+  if (backgroundMusic) {
+    isMuted = !isMuted;
+    backgroundMusic.muted = isMuted;
+    return isMuted;
+  }
+  return isMuted;
+};
+
+export const isMusicMuted = () => isMuted;
