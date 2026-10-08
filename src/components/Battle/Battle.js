@@ -3,9 +3,11 @@ import { HealthBar } from './HealthBar';
 import { calculateDamage } from '../../battle/damage';
 import { playSound, playSoundForDamage, playEndSound, SOUNDS } from '../../utils/audio';
 import './animations.css';
+import { BattleSplash } from './BattleSplash';
 
 export function Battle() {
   const [showBattle, setShowBattle] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
   const [playerHP, setPlayerHP] = useState(0);
   const [opponentHP, setOpponentHP] = useState(0);
   const [battleLog, setBattleLog] = useState([]);
@@ -89,7 +91,7 @@ export function Battle() {
       setSelectedPlayerMove(null);
       setSelectedOpponentMove(null);
       setWaitingForResolve(false);
-      setShowBattle(true);
+      setShowSplash(true);
     }
   };
   
@@ -198,6 +200,10 @@ export function Battle() {
     setWaitingForResolve(false);
   };
   
+  if (showSplash) {
+    return <BattleSplash player={selectedPlayer} opponent={selectedOpponent} onContinue={() => { setShowSplash(false); setShowBattle(true); }} />;
+  }
+
   // Selection Screen
   if (!showBattle) {
     return (
