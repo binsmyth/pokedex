@@ -5,7 +5,7 @@
  */
 export const POKEMON_CATALOG = {
   'Pikachu': {
-    hp: 280, attack: 65, defense: 75, speed: 90, types: ['Electric'], emoji: '⚡',
+    id: 25, hp: 280, attack: 65, defense: 75, speed: 90, types: ['Electric'], emoji: '⚡',
     moves: [
       { name: 'Thunderbolt', power: 90, type: 'Electric' },
       { name: 'Thunder Shock', power: 40, type: 'Electric' },
@@ -13,7 +13,7 @@ export const POKEMON_CATALOG = {
     ]
   },
   'Charizard': {
-    hp: 312, attack: 84, defense: 78, speed: 100, types: ['Fire', 'Flying'], emoji: '🔥',
+    id: 6, hp: 312, attack: 84, defense: 78, speed: 100, types: ['Fire', 'Flying'], emoji: '🔥',
     moves: [
       { name: 'Flare Blitz', power: 120, type: 'Fire' },
       { name: 'Flame Charge', power: 50, type: 'Fire' },
@@ -21,7 +21,7 @@ export const POKEMON_CATALOG = {
     ]
   },
   'Blastoise': {
-    hp: 316, attack: 83, defense: 100, speed: 78, types: ['Water'], emoji: '💧',
+    id: 9, hp: 316, attack: 83, defense: 100, speed: 78, types: ['Water'], emoji: '💧',
     moves: [
       { name: 'Hydro Pump', power: 110, type: 'Water' },
       { name: 'Water Gun', power: 40, type: 'Water' },
@@ -29,7 +29,7 @@ export const POKEMON_CATALOG = {
     ]
   },
   'Venusaur': {
-    hp: 320, attack: 82, defense: 83, speed: 80, types: ['Grass', 'Poison'], emoji: '🌿',
+    id: 3, hp: 320, attack: 82, defense: 83, speed: 80, types: ['Grass', 'Poison'], emoji: '🌿',
     moves: [
       { name: 'Power Whip', power: 120, type: 'Grass' },
       { name: 'Vine Whip', power: 45, type: 'Grass' },
@@ -37,7 +37,7 @@ export const POKEMON_CATALOG = {
     ]
   },
   'Gyarados': {
-    hp: 380, attack: 125, defense: 79, speed: 81, types: ['Water', 'Flying'], emoji: '🐉',
+    id: 130, hp: 380, attack: 125, defense: 79, speed: 81, types: ['Water', 'Flying'], emoji: '🐉',
     moves: [
       { name: 'Waterfall', power: 80, type: 'Water' },
       { name: 'Bounce', power: 85, type: 'Flying' },
@@ -45,7 +45,7 @@ export const POKEMON_CATALOG = {
     ]
   },
   'Gengar': {
-    hp: 240, attack: 130, defense: 60, speed: 110, types: ['Ghost', 'Poison'], emoji: '👻',
+    id: 94, hp: 240, attack: 130, defense: 60, speed: 110, types: ['Ghost', 'Poison'], emoji: '👻',
     moves: [
       { name: 'Shadow Ball', power: 80, type: 'Ghost' },
       { name: 'Sludge Bomb', power: 90, type: 'Poison' },
@@ -53,7 +53,7 @@ export const POKEMON_CATALOG = {
     ]
   },
   'Dragonite': {
-    hp: 364, attack: 134, defense: 95, speed: 80, types: ['Dragon', 'Flying'], emoji: '🐲',
+    id: 149, hp: 364, attack: 134, defense: 95, speed: 80, types: ['Dragon', 'Flying'], emoji: '🐲',
     moves: [
       { name: 'Outrage', power: 120, type: 'Dragon' },
       { name: 'Wing Attack', power: 60, type: 'Flying' },
@@ -61,7 +61,7 @@ export const POKEMON_CATALOG = {
     ]
   },
   'Tyranitar': {
-    hp: 400, attack: 134, defense: 110, speed: 61, types: ['Rock', 'Dark'], emoji: '🪨',
+    id: 248, hp: 400, attack: 134, defense: 110, speed: 61, types: ['Rock', 'Dark'], emoji: '🪨',
     moves: [
       { name: 'Stone Edge', power: 100, type: 'Rock' },
       { name: 'Crunch', power: 80, type: 'Dark' },
@@ -69,7 +69,7 @@ export const POKEMON_CATALOG = {
     ]
   },
   'Lucario': {
-    hp: 280, attack: 115, defense: 70, speed: 90, types: ['Fighting', 'Steel'], emoji: '🥋',
+    id: 448, hp: 280, attack: 115, defense: 70, speed: 90, types: ['Fighting', 'Steel'], emoji: '🥋',
     moves: [
       { name: 'Aura Sphere', power: 80, type: 'Fighting' },
       { name: 'Flash Cannon', power: 80, type: 'Steel' },
@@ -77,7 +77,7 @@ export const POKEMON_CATALOG = {
     ]
   },
   'Gardevoir': {
-    hp: 272, attack: 125, defense: 65, speed: 80, types: ['Psychic', 'Fairy'], emoji: '🔮',
+    id: 282, hp: 272, attack: 125, defense: 65, speed: 80, types: ['Psychic', 'Fairy'], emoji: '🔮',
     moves: [
       { name: 'Psychic', power: 90, type: 'Psychic' },
       { name: 'Moonblast', power: 95, type: 'Fairy' },
@@ -85,7 +85,7 @@ export const POKEMON_CATALOG = {
     ]
   },
   'Garchomp': {
-    hp: 432, attack: 130, defense: 95, speed: 102, types: ['Dragon', 'Ground'], emoji: '🦈',
+    id: 445, hp: 432, attack: 130, defense: 95, speed: 102, types: ['Dragon', 'Ground'], emoji: '🦈',
     moves: [
       { name: 'Earthquake', power: 100, type: 'Ground' },
       { name: 'Dragon Claw', power: 80, type: 'Dragon' },
@@ -93,7 +93,7 @@ export const POKEMON_CATALOG = {
     ]
   },
   'Scizor': {
-    hp: 280, attack: 130, defense: 100, speed: 65, types: ['Bug', 'Steel'], emoji: '✂️',
+    id: 212, hp: 280, attack: 130, defense: 100, speed: 65, types: ['Bug', 'Steel'], emoji: '✂️',
     moves: [
       { name: 'X-Scissor', power: 80, type: 'Bug' },
       { name: 'Iron Head', power: 80, type: 'Steel' },
@@ -101,7 +101,7 @@ export const POKEMON_CATALOG = {
     ]
   },
   'Lapras': {
-    hp: 520, attack: 85, defense: 80, speed: 60, types: ['Water', 'Ice'], emoji: '🐚',
+    id: 131, hp: 520, attack: 85, defense: 80, speed: 60, types: ['Water', 'Ice'], emoji: '🐚',
     moves: [
       { name: 'Surf', power: 90, type: 'Water' },
       { name: 'Ice Beam', power: 90, type: 'Ice' },
@@ -109,7 +109,7 @@ export const POKEMON_CATALOG = {
     ]
   },
   'Machamp': {
-    hp: 360, attack: 130, defense: 80, speed: 55, types: ['Fighting'], emoji: '💪',
+    id: 68, hp: 360, attack: 130, defense: 80, speed: 55, types: ['Fighting'], emoji: '💪',
     moves: [
       { name: 'Cross Chop', power: 100, type: 'Fighting' },
       { name: 'Rock Slide', power: 75, type: 'Rock' },

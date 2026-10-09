@@ -1,5 +1,20 @@
 .battle-container { width: 100%; }
 
+/* Animated Generation V sprites from PokéAPI; pixelated preserves their native art. */
+.pokemon-sprite {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+}
+
+.pokemon-sprite img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
 /* Keyboard focus: high-contrast ring on the purple background */
 .battle-button:focus-visible {
   outline: 3px solid #ffd93d;

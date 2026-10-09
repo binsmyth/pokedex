@@ -34,6 +34,10 @@ const getEffectiveness = (entry) => {
   return 'neutral';
 };
 
+const getAnimatedSpriteUrl = pokemon => (
+  `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${pokemon.id}.gif`
+);
+
 const SpeedIndicator = ({ playerName, opponentName, playerSpeed, opponentSpeed }) => {
   const { playerFirst } = determineTurnOrder(playerSpeed, opponentSpeed);
   const firstName = playerFirst ? playerName : opponentName;
@@ -297,16 +301,16 @@ export function Battle({ random = Math.random } = {}) {
         
         <div style={{ backgroundColor: 'rgba(255,255,255,0.1)', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
           <h2 style={{ margin: '0 0 10px 0' }}>{selectedOpponent} ({formatTypes(pokemonData[selectedOpponent])})</h2>
-          <div ref={opponentPokemonRef} aria-hidden="true" style={{ fontSize: '60px', textAlign: 'center', minHeight: '80px' }}>
-            {pokemonData[selectedOpponent].emoji}
+          <div ref={opponentPokemonRef} className="pokemon-sprite" aria-hidden="true">
+            <img src={getAnimatedSpriteUrl(pokemonData[selectedOpponent])} alt="" />
           </div>
           <HealthBar pokemon={selectedOpponent} maxHP={pokemonData[selectedOpponent]?.hp} currentHP={opponentHP} />
         </div>
         
         <div style={{ backgroundColor: 'rgba(255,255,255,0.1)', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
           <h2 style={{ margin: '0 0 10px 0' }}>{selectedPlayer} ({formatTypes(pokemonData[selectedPlayer])})</h2>
-          <div ref={playerPokemonRef} aria-hidden="true" style={{ fontSize: '60px', textAlign: 'center', minHeight: '80px' }}>
-            {pokemonData[selectedPlayer].emoji}
+          <div ref={playerPokemonRef} className="pokemon-sprite" aria-hidden="true">
+            <img src={getAnimatedSpriteUrl(pokemonData[selectedPlayer])} alt="" />
           </div>
           <HealthBar pokemon={selectedPlayer} maxHP={pokemonData[selectedPlayer]?.hp} currentHP={playerHP} />
         </div>
