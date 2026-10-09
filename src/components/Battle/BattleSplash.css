@@ -11,7 +11,11 @@
   width: min(900px, 100%); gap: clamp(12px, 5vw, 64px); }
 .battle-splash__fighter { min-width: 0; animation: fighter-arrive .65s cubic-bezier(.2,.8,.2,1) both; }
 .battle-splash__fighter--opponent { animation-delay: .12s; }
-.battle-splash__emoji { display: block; font-size: clamp(64px, 15vw, 150px); filter: drop-shadow(0 0 22px rgba(120,220,255,.65)); }
+.battle-splash__emoji, .battle-splash__sprite { display: block; width: clamp(130px, 22vw, 240px); height: clamp(130px, 22vw, 240px); object-fit: contain; margin: 0 auto; filter: drop-shadow(0 0 22px rgba(120,220,255,.65)); image-rendering: auto; }
+/* pixel-art GIFs: keep pixels crisp when scaled up; mirror the player so both fighters face each other */
+.battle-splash__sprite--animated { image-rendering: pixelated; }
+.battle-splash__fighter--player .battle-splash__sprite--animated { transform: scaleX(-1); }
+.battle-splash__emoji { font-size: clamp(64px, 15vw, 150px); }
 .battle-splash__fighter h2 { margin: 12px 0 4px; font-size: clamp(22px, 4vw, 38px); text-transform: uppercase; letter-spacing: .08em; }
 .battle-splash__label { color: #a9c7ff; font-size: 12px; font-weight: 800; letter-spacing: .2em; }
 .battle-splash__versus { position: relative; display: flex; flex-direction: column; align-items: center; color: #ffe66d; }
