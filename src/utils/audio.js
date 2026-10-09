@@ -3,7 +3,8 @@
  */
 
 let backgroundMusic = null;
-let isMuted = false;
+let isPaused = false;
+let musicVolume = 0.3;
 
 export const startBattleMusic = () => {
   try {
@@ -11,12 +12,12 @@ export const startBattleMusic = () => {
     const audioPath = `${publicUrl}/sounds/battle_music.mp3`;
 
     backgroundMusic = new Audio(audioPath);
-    backgroundMusic.volume = 0.3;
+    backgroundMusic.volume = musicVolume;
     backgroundMusic.loop = true;
     backgroundMusic.play().catch(error => {
       console.log('Could not play background music:', error.message);
     });
-    isMuted = false;
+    isPaused = false;
   } catch (error) {
     console.log('Error starting battle music:', error);
   }
@@ -28,16 +29,26 @@ export const stopBattleMusic = () => {
     backgroundMusic.currentTime = 0;
     backgroundMusic = null;
   }
-  isMuted = false;
+  isPaused = false;
 };
 
-export const toggleMuteMusic = () => {
+export const setMusicVolume = volume => {
+  musicVolume = volume;
   if (backgroundMusic) {
-    isMuted = !isMuted;
-    backgroundMusic.muted = isMuted;
-    return isMuted;
+    backgroundMusic.volume = volume;
   }
-  return isMuted;
 };
 
-export const isMusicMuted = () => isMuted;
+export const togglePauseMusic = () => {
+  if (backgroundMusic) {
+    if (isPaused) {
+      backgroundMusic.play().catch(error => {
+        console.log('Could not resume background music:', error.message);
+      });
+    } else {
+      backgroundMusic.pause();
+    }
+    isPaused = !isPaused;
+  }
+  return isPaused;
+};

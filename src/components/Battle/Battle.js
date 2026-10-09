@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { HealthBar } from './HealthBar';
 import { calculateDamage } from '../../battle/damage';
-import { startBattleMusic, stopBattleMusic, toggleMuteMusic, isMusicMuted } from '../../utils/audio';
+import { startBattleMusic, stopBattleMusic, togglePauseMusic, setMusicVolume } from '../../utils/audio';
 import './animations.css';
 
 export function Battle({ onExit }) {
@@ -14,7 +14,8 @@ export function Battle({ onExit }) {
   const [selectedOpponentMove, setSelectedOpponentMove] = useState(null);
   const [waitingForResolve, setWaitingForResolve] = useState(false);
   const [floatingDamages, setFloatingDamages] = useState([]);
-  const [isMusicMuted, setIsMusicMuted] = useState(false);
+  const [isMusicPaused, setIsMusicPaused] = useState(false);
+  const [musicVolume, setMusicVolumeState] = useState(0.3);
 
   const playerPokemonRef = useRef(null);
   const opponentPokemonRef = useRef(null);
@@ -338,7 +339,7 @@ export function Battle({ onExit }) {
         
         {(playerHP <= 0 || opponentHP <= 0) && (
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '15px' }}>
-            <button onClick={() => { startBattleMusic(); setPlayerHP(pokemonData[selectedPlayer].hp); setOpponentHP(pokemonData[selectedOpponent].hp); setBattleLog([]); setLastDamage(null); setSelectedPlayerMove(null); setSelectedOpponentMove(null); setWaitingForResolve(false); }} style={{ padding: '10px 20px', backgroundColor: '#ffd93d', border: 'none', color: '#333', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+            <button onClick={() => { startBattleMusic(); setIsMusicPaused(false); setPlayerHP(pokemonData[selectedPlayer].hp); setOpponentHP(pokemonData[selectedOpponent].hp); setBattleLog([]); setLastDamage(null); setSelectedPlayerMove(null); setSelectedOpponentMove(null); setWaitingForResolve(false); }} style={{ padding: '10px 20px', backgroundColor: '#ffd93d', border: 'none', color: '#333', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
               Reset Battle
             </button>
             <button onClick={() => { stopBattleMusic(); setShowBattle(false); }} style={{ padding: '10px 20px', backgroundColor: '#9c27b0', border: 'none', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
@@ -356,12 +357,11 @@ export function Battle({ onExit }) {
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '15px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
           <button
             onClick={() => {
-              const newMutedState = toggleMuteMusic();
-              setIsMusicMuted(newMutedState);
+              setIsMusicPaused(togglePauseMusic());
             }}
             style={{
               padding: '8px 12px',
-              backgroundColor: isMusicMuted ? 'rgba(255, 100, 100, 0.5)' : 'rgba(100, 200, 255, 0.5)',
+              backgroundColor: isMusicPaused ? 'rgba(255, 100, 100, 0.5)' : 'rgba(100, 200, 255, 0.5)',
               border: 'none',
               color: 'white',
               borderRadius: '6px',
@@ -373,15 +373,30 @@ export function Battle({ onExit }) {
               fontWeight: 'bold',
               transition: 'all 0.2s'
             }}
-            title={isMusicMuted ? 'Unmute' : 'Mute'}
+            title={isMusicPaused ? 'Play Music' : 'Pause Music'}
           >
-            {isMusicMuted ? '🔇' : '🔊'}
+            {isMusicPaused ? '▶️' : '⏸️'}
           </button>
+
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={musicVolume}
+            onChange={e => {
+              const volume = Number(e.target.value);
+              setMusicVolumeState(volume);
+              setMusicVolume(volume);
+            }}
+            title={`Volume: ${Math.round(musicVolume * 100)}%`}
+            style={{ width: '120px', cursor: 'pointer' }}
+          />
 
           <button
             onClick={() => {
               stopBattleMusic();
-              setIsMusicMuted(false);
+              setIsMusicPaused(false);
             }}
             style={{
               padding: '8px 12px',
