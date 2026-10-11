@@ -1,3 +1,7 @@
+# Historical Report: Phase 2 Integration, Data & Tests
+
+> **Historical snapshot (2026-10-05).** Test totals and data-source notes below reflect that date and are superseded by `IMPLEMENTATION_STATUS.md` and `game_mechanics.md`.
+
 # Phase 2: Integration, Data & Tests - COMPLETE ✅
 **Date: Oct 5, 2026**
 

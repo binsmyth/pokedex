@@ -1,6 +1,6 @@
 # Pokémon Battle Simulator - Requirements & Roadmap
 
-**Project Vision:** Add a 1v1 turn-based battle system to the Pokédex app where players can battle their favorite Pokémon using type matchups and stats. Implement as tiny incremental features, progressively building from simple to complex.
+**Project Vision:** Add a 1v1 turn-based battle system to the Pokédex app where players battle Pokémon using type matchups and stats. The current implementation loads Pokémon and damaging moves from PokeAPI, while type effectiveness comes from a static local chart. Build incrementally, from simple to complex.
 
 ---
 
@@ -18,7 +18,7 @@
 ## Vision & Goals
 
 ### Long-Term Goal
-Create an engaging Pokémon card game where players can:
+Create an engaging Pokémon battle simulator where players can:
 - Battle Pokémon with strategic matchups
 - Experience visual and interactive gameplay
 - Build teams and compete (far future)
@@ -29,7 +29,7 @@ Create an engaging Pokémon card game where players can:
 - **Build Incrementally:** Tiny features that layer into complexity
 - **Visual First:** Prioritize satisfying animations and feedback
 - **Interactive:** Player choices matter each turn
-- **Scalable Architecture:** Design for 6v6 teams from day one, even if MVP is 1v1
+- **Focused scope:** Implement and validate 1v1 first; avoid complexity solely for hypothetical team battles.
 
 ### Target Experience
 - **Engagement:** Visual satisfaction + interactive turn-based gameplay
@@ -47,9 +47,8 @@ Create an engaging Pokémon card game where players can:
 
 ```
 SETUP PHASE:
-1. Player selects their Pokémon (from Pokédex or favorites)
-2. Opponent is assigned a random Pokémon
-3. Both Pokémon appear on screen
+1. Player selects one Pokémon for each side from the roster loaded from PokeAPI
+2. Both Pokémon appear on screen
 
 BATTLE LOOP (each turn):
 1. Player selects a move from their Pokémon's available move pool
@@ -68,7 +67,7 @@ END CONDITION:
 ```
 
 ### Player Interactions
-- **Pokémon Selection:** Pick their Pokémon from the Pokédex or use a random battle
+- **Pokémon Selection:** Choose both Pokémon from the loaded roster
 - **Move Selection:** Click move from their Pokémon's available moves each turn
 - **View Stats:** See current HP, types, stats during battle
 - **Rematch:** Fight again or select different Pokémon
@@ -164,22 +163,25 @@ const calculateDamage = (moveData, attacker, defender) => {
   const baseRawDamage = moveData.power * (attacker.attack / defender.defense);
   const typeMultiplier = getTypeMatchup(moveData.type, defender.types);
   const rawDamage = baseRawDamage * typeMultiplier;
+  if (typeMultiplier === 0) return 0;
   const finalDamage = Math.max(1, Math.floor(rawDamage));
   return finalDamage;
 };
 ```
 
 **Formula Details:**
-- `moveData.power`: The move's base power (never null; pre-curated moves only)
-- `attacker.attack`: Base Attack stat (no level scaling for MVP)
-- `defender.defense`: Base Defense stat
+- `moveData.power`: Move base power (moves without power and status moves are filtered during API loading)
+- `attacker.attack`: battle Attack value, the greater of base Attack and base Special Attack
+- `defender.defense`: battle Defense value, the greater of base Defense and base Special Defense
+- `HP`: base HP multiplied by 4 for battle play
+- `Speed`: base Speed
 - `typeMultiplier`: Looked up from type matchup table
   - Dual-type: multiply damage vs Type1 × damage vs Type2 (e.g., Rock vs Fire/Flying = 2x × 2x = 4x)
   - Super effective: 2x
   - Resistant: 0.5x
   - Immune: 0x
-- No STAB, no critical hits, no randomness in MVP
-- **Minimum damage of 1** if result rounds below 1
+- No STAB or critical hits. Damage is deterministic; opponent move choice is random (and injectable for tests).
+- **Minimum damage of 1** for non-immune moves if the result rounds below 1; immunity deals 0
 
 **Examples:**
 - Move Power 40, ATK 100, DEF 50, type 1x: `40 * (100/50) * 1 = 80 damage`
@@ -189,9 +191,8 @@ const calculateDamage = (moveData, attacker, defender) => {
 ### Turn Order & Resolution
 
 **Speed-based turn order:**
-- If `attacker.speed > defender.speed`: Attacker goes first
-- If `attacker.speed <= defender.speed`: Defender goes first
-  - (On a tie, defender always acts first to break symmetry)
+- Higher Speed goes first.
+- On a tie, the opponent goes first.
 
 **Critical rule: A Pokémon faints immediately upon reaching 0 HP**
 - If the faster Pokémon KOs the slower one, the slower Pokémon does **not** get to act that turn
@@ -228,9 +229,9 @@ Battle State:
 
 ## Data Requirements
 
-### Move Catalog (Curated Local Data, MVP)
+### Move Data (PokeAPI, current implementation)
 
-**For MVP, use a hand-curated move catalog with the following structure:**
+The following is a conceptual move shape, not a checked-in local catalog. Move details are fetched from PokeAPI for the loaded roster. Moves without power and status-category moves are excluded; the loader gathers up to four usable damaging moves from a bounded candidate list per Pokémon.
 
 ```json
 {
@@ -253,15 +254,9 @@ Battle State:
 }
 ```
 
-**Why local curated moves?**
-- PokeAPI move pools are version-specific and require complex filtering
-- Many PokeAPI moves have `power: null` and unsupported effects
-- A curated set ensures predictable battle balance and no surprises
-- Easier to test and debug
+**Current limitations:** The loader does not define a game-version/learn-method policy, and move availability depends on PokeAPI. Move effects beyond power and type are not modeled. Offline caching and supported generation/version remain open product requirements.
 
-**For Level 2+**, fetch move data from PokeAPI with filtering for `power != null` and version-specific learn methods.
-
-### Pokémon Data (From PokeAPI or Pokédex Cache)
+### Pokémon Data (PokeAPI battle roster)
 
 **Required fields for battle:**
 - `id` (national dex number)
@@ -270,11 +265,11 @@ Battle State:
 - `sprites.front_default` (battle image)
 - `types` (array of 1-2 type objects)
 
-**For MVP:** Cache Pokémon data once loaded in the Pokédex; reuse during battle. Do not require fresh API calls for battle startup.
+**Current implementation:** Battle setup loads the roster and move details from PokeAPI via `src/api/battlePokemon.js`. The UI presents loading and retryable error states, filters unusable move data, and requires at least two Pokémon to load. Battle calculations use the local static type chart. Pokémon and moves are validated before battle start. Offline caching is not currently provided.
 
 ### Type Matchup Table (Static Reference)
 
-Embedding or loading from PokeAPI `/type/{type_id}` endpoint:
+Use the static local type chart in `src/data/typeChart.js` for the current implementation; do not fetch type relations during battle.
 ```
 Damage Relations:
   - double_damage_to: types this type is strong against
@@ -288,8 +283,8 @@ Defender takes (Attack Type vs Def Type1) × (Attack Type vs Def Type2)
 
 Example: Fire move vs Water/Flying Pokémon
   Fire vs Water = 0.5x (resists)
-  Fire vs Flying = 2x (super effective)
-  Total multiplier = 0.5x × 2x = 1x (neutral)
+  Fire vs Flying = 1x (neutral)
+  Total multiplier = 0.5x × 1x = 0.5x (resisted)
 ```
 
 ---
@@ -298,10 +293,10 @@ Example: Fire move vs Water/Flying Pokémon
 
 ### Data Flow
 ```
-Pokédex (existing) → Battle Feature (new)
-  - Reuse cached Pokémon data from Pokédex
-  - Link from Pokémon detail view to battle simulator
-  - Battle system uses same type matchup data
+PokeAPI → Battle setup → Battle Feature
+  - Load roster, Pokémon stats/types/sprites, and damaging move details during setup
+  - Use a static local type chart for battle calculations
+  - Handle loading and retryable setup errors in the battle UI
 ```
 
 ### Component Structure
@@ -347,12 +342,11 @@ Pokédex (existing) → Battle Feature (new)
 A battle is shippable when:
 
 **Core Gameplay:**
-- [x] A battle can start using only local data (no required API calls)
-- [x] Player can select their Pokémon from the Pokédex or random option
-- [x] Opponent is assigned a random Pokémon
-- [x] Each Pokémon has 2-4 valid, curated moves
+- [x] Battle setup loads Pokémon and damaging moves from PokeAPI and presents loading/error/retry states
+- [x] Player selects both Pokémon from the loaded battle roster
+- [x] Loaded Pokémon have usable damaging moves with positive power (up to four are presented)
 - [x] Player can select only an available move while battle is in `player_select` phase
-- [x] Speed stat correctly determines turn order (attacker goes first if higher, defender first on tie)
+- [x] Speed stat determines turn order (higher speed first; opponent goes first on a tie)
 - [x] Damage is calculated using the exact formula specified above
 - [x] Dual-type effectiveness is calculated correctly (multiplied)
 - [x] A Pokémon with 0 HP faints immediately and cannot act
@@ -394,7 +388,7 @@ A battle is shippable when:
 - [ ] Recoil damage, healing moves
 - [ ] Protection moves (reduce damage next turn)
 - [ ] Multi-turn moves (charge up then attack)
-- [ ] Live move data fetching from PokeAPI
+- [x] Live damaging move data loading from PokeAPI (game-version/learn-method filtering remains unspecified)
 - [ ] Battle replay and sharing
 - [ ] Sound effects and background music
 
@@ -427,7 +421,7 @@ A battle is shippable when:
 - Performance optimization for animation rendering
 - Mobile-responsive battle UI
 - Accessibility (color-blind mode for type indicators)
-- Offline support (cache PokeAPI data)
+- Offline support/cache policy for battle data (not currently implemented)
 
 ---
 
@@ -475,11 +469,13 @@ A battle is shippable when:
 
 **Document Created:** 2026-09-22  
 **Last Updated:** 2026-09-29  
-**Status:** MVP Specification Complete - Ready for Implementation
+**Status:** Product scope and acceptance criteria. Current implementation status is tracked in `IMPLEMENTATION_STATUS.md`; implemented mechanics are documented in `game_mechanics.md`.
 
 ---
 
-## Implementation Checklist
+## Original Implementation Checklist (Historical)
+
+> This original phase-by-phase checklist is superseded and is not a current task list. See `IMPLEMENTATION_STATUS.md` for verified status and follow-up.
 
 ### Phase 1: Setup & Core Logic (Week 1)
 - [ ] Create `src/battle/` module with pure functions:
@@ -487,7 +483,7 @@ A battle is shippable when:
   - [ ] `typeMatchup.js` (type effectiveness table + lookup)
   - [ ] `resolveTurn.js` (turn order, damage application)
   - [ ] `battleState.js` (state machine logic)
-- [ ] Create curated move catalog in `src/data/moves.json`
+- [ ] Create curated move catalog in `src/data/moves.json` (original plan; superseded by current PokeAPI-backed move loading)
 - [ ] Create test file with damage formula test cases
 
 ### Phase 2: React Components (Week 2)

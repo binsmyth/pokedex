@@ -1,3 +1,7 @@
+# Historical Report: Phase 1 Critical Fixes
+
+> **Historical snapshot (2026-10-02).** See `IMPLEMENTATION_STATUS.md` for current status and `game_mechanics.md` for current implemented rules.
+
 # Phase 1: Critical Fixes - COMPLETE ✅
 **Date: Oct 2, 2026**
 

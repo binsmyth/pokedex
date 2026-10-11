@@ -1,4 +1,6 @@
-# Level 1 Battle System - Quick Reference
+# Historical Quick Reference
+
+> **Historical snapshot (2026-10-05).** Use `IMPLEMENTATION_STATUS.md` for current status and `game_mechanics.md` for implemented rules.
 
 ## 🎯 What's Done
 
@@ -219,6 +221,4 @@ Examples:
 ---
 
 **Last Updated:** Oct 5, 2026
-**Phase 1 Status:** ✅ COMPLETE
-**Phase 2 Status:** ✅ COMPLETE
-**Ready for:** Phase 3 (Testing edge cases) / Phase 4 (Polish & UX)
+**Historical phase status:** Phase 1 and Phase 2 were reported complete as of 2026-10-05. These next-step notes are superseded by `IMPLEMENTATION_STATUS.md`.
