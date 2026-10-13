@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { HealthBar } from './HealthBar';
-import { calculateDamage } from '../../battle/damage';
+import { resolveTurn } from '../../battle/turnResolution';
 import { playSound, playSoundForDamage, playEndSound, SOUNDS } from '../../utils/audio';
 import './animations.css';
 
@@ -112,87 +112,73 @@ export function Battle() {
   const handleResolveAttacks = () => {
     const playerMove = pokemonData[selectedPlayer].moves[selectedPlayerMove];
     const opponentMove = pokemonData[selectedOpponent].moves[selectedOpponentMove];
-    
-    const playerStats = pokemonData[selectedPlayer];
-    const opponentStats = pokemonData[selectedOpponent];
-    
-    const playerResult = calculateDamage(playerStats, opponentStats, playerMove.type, playerMove.power);
-    const opponentResult = calculateDamage(opponentStats, playerStats, opponentMove.type, opponentMove.power);
-    
+    const turn = resolveTurn(
+      {
+        player: { ...pokemonData[selectedPlayer], hp: playerHP },
+        opponent: { ...pokemonData[selectedOpponent], hp: opponentHP },
+      },
+      { player: playerMove, opponent: opponentMove },
+    );
     const newLog = [...battleLog];
-    
-    // Player attacks opponent
-    let message1 = selectedPlayer + ' uses ' + playerMove.name + '!';
-    if (playerResult.isSuperEffective) message1 += ' Super effective! (2x)';
-    if (playerResult.isNotVeryEffective) message1 += ' Not very effective... (0.5x)';
-    if (playerResult.isImmune) message1 += ' No effect!';
-    message1 += ' Deals ' + playerResult.damage + ' damage!';
-    newLog.push(message1);
-    
-    // Play damage sound and trigger animation
-    playSoundForDamage(playerResult.isSuperEffective, playerResult.isNotVeryEffective, playerResult.isImmune);
-    if (opponentPokemonRef.current) {
-      triggerAnimation(opponentPokemonRef, 'pokemon-damaged');
-    }
-    
-    const newOpponentHP = Math.max(0, opponentHP - playerResult.damage);
-    setOpponentHP(newOpponentHP);
-    setLastDamage({ damage: playerResult.damage, effective: playerResult.isSuperEffective ? 'Super Effective!' : playerResult.isNotVeryEffective ? 'Not Very Effective' : 'Neutral' });
-    
-    // Create floating damage number for opponent
-    if (opponentPokemonRef.current) {
-      const rect = opponentPokemonRef.current.getBoundingClientRect();
-      createFloatingDamage(rect.x + rect.width / 2, rect.y, playerResult.damage, 'damage');
-    }
-    
-    // Opponent attacks player if still alive
-    if (newOpponentHP > 0) {
+
+    const applyAttackEvent = (event) => {
+      const isPlayerAttacking = event.attacker === 'player';
+      const attackerName = isPlayerAttacking ? selectedPlayer : selectedOpponent;
+      const targetRef = isPlayerAttacking ? opponentPokemonRef : playerPokemonRef;
+      const damageResult = {
+        isSuperEffective: event.effectiveness === 'super',
+        isNotVeryEffective: event.effectiveness === 'notVery',
+        isImmune: event.effectiveness === 'immune',
+      };
+      let message = attackerName + ' uses ' + event.move.name + '!';
+      if (damageResult.isSuperEffective) message += ' Super effective! (2x)';
+      if (damageResult.isNotVeryEffective) message += ' Not very effective... (0.5x)';
+      if (damageResult.isImmune) message += ' No effect!';
+      message += ' Deals ' + event.damage + ' damage!';
+      newLog.push(message);
+
+      playSoundForDamage(damageResult.isSuperEffective, damageResult.isNotVeryEffective, damageResult.isImmune);
+      if (targetRef.current) {
+        triggerAnimation(targetRef, 'pokemon-damaged');
+        const rect = targetRef.current.getBoundingClientRect();
+        createFloatingDamage(rect.x + rect.width / 2, rect.y, event.damage, 'damage');
+      }
+    };
+
+    const applyOutcome = () => {
+      if (turn.outcome === 'playerWin' || turn.outcome === 'draw') {
+        playEndSound(true);
+        if (opponentPokemonRef.current) triggerAnimation(opponentPokemonRef, 'pokemon-victory');
+      } else if (turn.outcome === 'playerLoss') {
+        playEndSound(false);
+        if (playerPokemonRef.current) triggerAnimation(playerPokemonRef, 'pokemon-defeat');
+      }
+    };
+
+    const setDisplayedLastDamage = (event) => {
+      setLastDamage({
+        damage: event.damage,
+        effective: event.effectiveness === 'super' ? 'Super Effective!' : event.effectiveness === 'notVery' ? 'Not Very Effective' : event.effectiveness === 'immune' ? 'No effect' : 'Neutral',
+      });
+    };
+
+    applyAttackEvent(turn.events[0]);
+    setDisplayedLastDamage(turn.events[0]);
+    setOpponentHP(turn.state.opponentHP);
+
+    if (turn.events.length > 1) {
       setTimeout(() => {
-        let message2 = selectedOpponent + ' uses ' + opponentMove.name + '!';
-        if (opponentResult.isSuperEffective) message2 += ' Super effective! (2x)';
-        if (opponentResult.isNotVeryEffective) message2 += ' Not very effective... (0.5x)';
-        if (opponentResult.isImmune) message2 += ' No effect!';
-        message2 += ' Deals ' + opponentResult.damage + ' damage!';
-        newLog.push(message2);
+        applyAttackEvent(turn.events[1]);
+        setPlayerHP(turn.state.playerHP);
         setBattleLog(newLog);
-        
-        // Play damage sound and trigger animation
-        playSoundForDamage(opponentResult.isSuperEffective, opponentResult.isNotVeryEffective, opponentResult.isImmune);
-        if (playerPokemonRef.current) {
-          triggerAnimation(playerPokemonRef, 'pokemon-damaged');
-        }
-        
-        const newPlayerHP = Math.max(0, playerHP - opponentResult.damage);
-        setPlayerHP(newPlayerHP);
-        
-        // Create floating damage number for player
-        if (playerPokemonRef.current) {
-          const rect = playerPokemonRef.current.getBoundingClientRect();
-          createFloatingDamage(rect.x + rect.width / 2, rect.y, opponentResult.damage, 'damage');
-        }
-        
-        // Check for battle end
-        if (newPlayerHP === 0) {
-          playEndSound(false);
-          if (playerPokemonRef.current) {
-            triggerAnimation(playerPokemonRef, 'pokemon-defeat');
-          }
-        } else if (newOpponentHP === 0) {
-          playEndSound(true);
-          if (opponentPokemonRef.current) {
-            triggerAnimation(opponentPokemonRef, 'pokemon-victory');
-          }
-        }
+        setDisplayedLastDamage(turn.events[1]);
+        applyOutcome();
       }, 300);
     } else {
-      // Opponent is defeated
-      playEndSound(true);
-      if (opponentPokemonRef.current) {
-        triggerAnimation(opponentPokemonRef, 'pokemon-victory');
-      }
       setBattleLog(newLog);
+      applyOutcome();
     }
-    
+
     setSelectedPlayerMove(null);
     setSelectedOpponentMove(null);
     setWaitingForResolve(false);
