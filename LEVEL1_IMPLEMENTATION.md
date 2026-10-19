@@ -1,8 +1,14 @@
+# Historical Report: Level 1 Battle System Implementation
+
+> **Historical snapshot (2026-09-30).** This report is superseded by `IMPLEMENTATION_STATUS.md` and `game_mechanics.md`. Details below may describe files or behavior that no longer match the repository.
+
 # Level 1 Battle System - Implementation Complete ✅
+
+> ⚠️ **Outdated (Sep 30, 2026).** Parts of this document describe code that doesn't exist in the repo (e.g. a 30-move catalog, `getDualTypeMatchup`, `testDamageCalculation`, `generateBattleSummary`). For the current state see `IMPLEMENTATION_STATUS.md`, `PHASE2_COMPLETION.md` and `QUICK_REFERENCE.md`.
 
 **Status:** Implementation ready for integration and testing  
 **Date:** 2026-09-30  
-**Specification:** Based on `level1_game_mechanics.md` with GPT critique improvements
+**Specification:** Historical implementation notes; current mechanics are in `game_mechanics.md`
 
 ---
 
@@ -382,10 +388,10 @@ These are intentional simplifications for the MVP. Future versions can add these
 
 ## 📞 Support
 
-All files follow the `level1_game_mechanics.md` specification with improvements from the GPT critique.
+These notes describe an earlier implementation snapshot. See `game_mechanics.md` for current mechanics.
 
 For issues or questions, refer to:
-- `level1_game_mechanics.md` - Complete specification
+- `game_mechanics.md` - Current mechanics reference
 - `critique_gpt.md` - Original feedback
 - `critique_level1_game_mechanics.md` - Specification feedback
 

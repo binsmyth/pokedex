@@ -1,4 +1,10 @@
+# Historical Report: Level 1 Battle System Build
+
+> **Historical snapshot (2026-09-30).** This report is superseded by `IMPLEMENTATION_STATUS.md` and `game_mechanics.md`. Details below may describe files or behavior that no longer match the repository.
+
 # Level 1 Battle System - Build Complete ✅
+
+> ⚠️ **Outdated (Sep 30, 2026).** Parts of this document describe code that doesn't exist in the repo (e.g. a 30-move `moveCatalog.js` and a 10-Pokémon `pokemonCatalog.js`. Both were empty stubs; `pokemonCatalog.js` was filled in during Phase 2 and `moveCatalog.js` is still a stub). For the current state see `IMPLEMENTATION_STATUS.md`, `PHASE2_COMPLETION.md` and `QUICK_REFERENCE.md`.
 
 **Date:** 2026-09-30  
 **Status:** Ready for integration and testing
@@ -31,7 +37,7 @@
 - ✅ `src/hooks/useBattle.js` - Battle state and logic
 
 ### Documentation (3 docs)
-- ✅ `level1_game_mechanics.md` - Updated with GPT critiques
+- Historical mechanics document (renamed to `game_mechanics.md`; see that file for current rules)
 - ✅ `LEVEL1_IMPLEMENTATION.md` - Complete implementation guide
 - ✅ `BUILD_SUMMARY.md` - This file
 
@@ -140,7 +146,7 @@ src/
     └── PokemonSelection.css (~400 lines)
 
 Docs/
-├── level1_game_mechanics.md (UPDATED)
+├── game_mechanics.md (current mechanics reference)
 ├── LEVEL1_IMPLEMENTATION.md (NEW)
 └── BUILD_SUMMARY.md (NEW)
 ```

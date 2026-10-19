@@ -1,4 +1,6 @@
-# Critique: `level1_game_mechanics.md`
+# Historical Critique: Original Level 1 Mechanics Draft
+
+> This critique evaluates the former `level1_game_mechanics.md` specification and is retained for context. Current rules are in `game_mechanics.md`; do not treat this as an active task list.
 
 ## Overall assessment
 

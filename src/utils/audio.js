@@ -3,9 +3,6 @@
  * Place audio files in public/sounds/ folder
  */
 
-// Store audio instances for better control
-const audioCache = {};
-
 /**
  * Play a sound effect
  * @param {string} soundName - Name of sound file (without .mp3)

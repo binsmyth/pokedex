@@ -1,71 +1,122 @@
-import { resolveTurn } from './turnResolution';
+import {
+  createBattleState,
+  resolveTurn,
+  calculateTotalDamageDealt,
+  calculateTotalDamageTaken
+} from './turnResolution';
 
-const pikachu = {
-  name: 'Pikachu',
-  hp: 280,
-  attack: 65,
-  defense: 75,
-  type: 'Electric',
-};
+beforeAll(() => {
+  jest.spyOn(console, 'log').mockImplementation(() => {});
+});
 
-const blastoise = {
-  name: 'Blastoise',
-  hp: 316,
-  attack: 83,
-  defense: 100,
-  type: 'Water',
-};
+// Neutral matchups with attack == defense, so damage == move power
+const makePokemon = (name, speed, types = ['Normal']) => ({ name, attack: 100, defense: 100, speed, types });
+const move = (power, type = 'Normal') => ({ name: `Hit ${power}`, power, type });
 
-const thunderbolt = { name: 'Thunderbolt', power: 90, type: 'Electric' };
-const hydroPump = { name: 'Hydro Pump', power: 110, type: 'Water' };
-
-describe('resolveTurn', () => {
-  test('applies player attack first and returns ordered attack events and next HP', () => {
-    const result = resolveTurn(
-      { player: pikachu, opponent: blastoise },
-      { player: thunderbolt, opponent: hydroPump },
-    );
-
-    expect(result).toMatchObject({
-      state: { playerHP: 220, opponentHP: 199 },
-      events: [
-        { attacker: 'player', move: thunderbolt, damage: 117, effectiveness: 'super' },
-        { attacker: 'opponent', move: hydroPump, damage: 60, effectiveness: 'notVery' },
-      ],
-      outcome: 'ongoing',
+describe('createBattleState', () => {
+  test('starts at turn 0 with full HP and an empty log', () => {
+    expect(createBattleState(100, 80)).toEqual({
+      currentTurn: 0,
+      phase: 'player_select',
+      winner: null,
+      playerHP: 100,
+      opponentHP: 80,
+      battleLog: []
     });
   });
+});
 
-  test('does not let a knocked-out opponent retaliate', () => {
-    const result = resolveTurn(
-      { player: pikachu, opponent: { ...blastoise, hp: 10 } },
-      { player: thunderbolt, opponent: hydroPump },
-    );
+describe('resolveTurn', () => {
+  test('faster pokemon attacks first and both attack when neither faints', () => {
+    const state = resolveTurn(createBattleState(100, 100), makePokemon('Fast', 90), makePokemon('Slow', 50), move(30), move(20));
 
-    expect(result.state).toMatchObject({ playerHP: pikachu.hp, opponentHP: 0 });
-    expect(result.events).toHaveLength(1);
-    expect(result.outcome).toBe('playerWin');
+    expect(state.battleLog.map(e => e.actor)).toEqual(['player', 'opponent']);
+    expect(state.opponentHP).toBe(70);
+    expect(state.playerHP).toBe(80);
+    expect(state.currentTurn).toBe(1);
+    expect(state.phase).toBe('player_select');
+    expect(state.winner).toBeNull();
   });
 
-  test('reports a draw for a state where both combatants have zero HP', () => {
-    const result = resolveTurn(
-      { player: { ...pikachu, hp: 0 }, opponent: { ...blastoise, hp: 0 } },
-      { player: thunderbolt, opponent: hydroPump },
-    );
-
-    expect(result.state).toMatchObject({ playerHP: 0, opponentHP: 0 });
-    expect(result.outcome).toBe('draw');
-    expect(result.events).toEqual([]);
+  test('opponent attacks first on a speed tie', () => {
+    const state = resolveTurn(createBattleState(100, 100), makePokemon('A', 70), makePokemon('B', 70), move(10), move(10));
+    expect(state.battleLog[0].actor).toBe('opponent');
   });
 
-  test('preserves an existing knockout instead of resolving another attack', () => {
-    const result = resolveTurn(
-      { player: pikachu, opponent: { ...blastoise, hp: 0 } },
-      { player: thunderbolt, opponent: hydroPump },
-    );
+  test('a KO by the first attacker skips the counterattack', () => {
+    const state = resolveTurn(createBattleState(50, 100), makePokemon('Slow', 10), makePokemon('Fast', 90), move(200), move(60));
 
-    expect(result.state).toMatchObject({ playerHP: pikachu.hp, opponentHP: 0 });
-    expect(result.outcome).toBe('playerWin');
-    expect(result.events).toEqual([]);
+    expect(state.battleLog).toHaveLength(1);
+    expect(state.battleLog[0].actor).toBe('opponent');
+    expect(state.playerHP).toBe(0);
+    expect(state.opponentHP).toBe(100);
+    expect(state.winner).toBe('opponent');
+    expect(state.phase).toBe('finished');
+  });
+
+  test('the slower pokemon can still win with its counterattack', () => {
+    const state = resolveTurn(createBattleState(100, 30), makePokemon('Slow', 10), makePokemon('Fast', 90), move(40), move(20));
+    expect(state.battleLog).toHaveLength(2);
+    expect(state.opponentHP).toBe(0);
+    expect(state.winner).toBe('player');
+  });
+
+  test('HP never drops below 0 and hpLost excludes overkill', () => {
+    const state = resolveTurn(createBattleState(100, 30), makePokemon('Fast', 90), makePokemon('Slow', 10), move(80), move(10));
+    expect(state.opponentHP).toBe(0);
+    expect(state.battleLog[0]).toMatchObject({ damage: 80, hpLost: 30, defenderHP: 0 });
+  });
+
+  test('logs type effectiveness for each attack', () => {
+    const state = resolveTurn(
+      createBattleState(500, 500),
+      makePokemon('Gengar', 110, ['Ghost', 'Poison']),
+      makePokemon('Snorlax', 30, ['Normal']),
+      move(80, 'Ghost'),
+      move(80, 'Normal')
+    );
+    expect(state.battleLog[0]).toMatchObject({ actorName: 'Gengar', damage: 0, isImmune: true, multiplier: 0 });
+    expect(state.battleLog[1]).toMatchObject({ actorName: 'Snorlax', damage: 0, isImmune: true });
+  });
+
+  test('appends to the existing log and does not mutate its inputs', () => {
+    const player = makePokemon('A', 90);
+    const opponent = makePokemon('B', 10);
+    const playerCopy = { ...player };
+    const opponentCopy = { ...opponent };
+    const start = createBattleState(100, 100);
+
+    const turn1 = resolveTurn(start, player, opponent, move(10), move(10));
+    const turn2 = resolveTurn(turn1, player, opponent, move(10), move(10));
+
+    expect(start).toEqual(createBattleState(100, 100));
+    expect(turn1.battleLog).toHaveLength(2);
+    expect(player).toEqual(playerCopy);
+    expect(opponent).toEqual(opponentCopy);
+    expect(turn2.currentTurn).toBe(2);
+    expect(turn2.battleLog.map(e => e.turn)).toEqual([1, 1, 2, 2]);
+    expect(turn2.opponentHP).toBe(80);
+  });
+});
+
+describe('damage totals', () => {
+  const battleLog = [
+    { actor: 'player', damage: 30, hpLost: 30 },
+    { actor: 'opponent', damage: 20, hpLost: 20 },
+    { actor: 'player', damage: 90, hpLost: 70 }
+  ];
+
+  test('calculateTotalDamageDealt sums HP actually removed', () => {
+    expect(calculateTotalDamageDealt(battleLog, 'player')).toBe(100);
+    expect(calculateTotalDamageDealt(battleLog, 'opponent')).toBe(20);
+  });
+
+  test('calculateTotalDamageTaken is the other side\'s damage dealt', () => {
+    expect(calculateTotalDamageTaken(battleLog, 'player')).toBe(20);
+    expect(calculateTotalDamageTaken(battleLog, 'opponent')).toBe(100);
+  });
+
+  test('empty log totals to 0', () => {
+    expect(calculateTotalDamageDealt([], 'player')).toBe(0);
   });
 });

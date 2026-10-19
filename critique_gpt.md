@@ -1,4 +1,6 @@
-# Critique of `GAME_REQUIREMENTS.md`
+# Historical Critique of `GAME_REQUIREMENTS.md`
+
+> This critique records feedback on an earlier draft. Product requirements are maintained in `GAME_REQUIREMENTS.md`; current mechanics and status are in `game_mechanics.md` and `IMPLEMENTATION_STATUS.md`.
 
 ## Overall assessment
 
